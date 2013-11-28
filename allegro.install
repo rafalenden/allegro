@@ -1,0 +1,26 @@
+<?php
+
+/**
+ * Implements hook_requirements().
+ */
+function allegro_requirements($phase) {
+  $t = get_t();
+  $requirements = array();
+  if (!class_exists('SoapClient')) {
+    $requirements['allegro_soap'] += array(
+      'severity' => REQUIREMENT_ERROR,
+      'description' => $t('Allegro requires the PHP <a href="!soap_url">SOAP extension</a>.', array('!soap_url' => 'http://php.net/manual/en/book.soap.php')),
+    );
+  }
+  return $requirements;
+}
+
+/**
+ * Implements hook_uinstall().
+ */
+function allegro_uinstall() {
+  variable_del('allegro_login');
+  variable_del('allegro_password');
+  variable_del('allegro_webapikey');
+  variable_del('allegro_country_code');
+}

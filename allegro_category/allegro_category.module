@@ -1,0 +1,272 @@
+<?php
+
+/**
+ * Implements hook_menu().
+ */
+function allegro_category_menu() {
+  $items['admin/allegro/settings/categories'] = array(
+    'title' => 'Categories',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('allegro_category_settings_form'),
+    'access arguments' => array('administer allegro categories'),
+    'file' => 'allegro_category.admin.inc',
+    'type' => MENU_LOCAL_TASK,
+  );
+  return $items;
+}
+
+/**
+ * Loads a category object from the database.
+ *
+ * @param $cid
+ *   The category ID.
+ *
+ * @return
+ *   A fully-populated category object, or FALSE if the category is not found.
+ */
+function allegro_category_load($cid) {
+  return allegro_category_load_multiple(array($cid));
+}
+
+/**
+ * Loads multiply category objects from the database.
+ *
+ * @param $cids
+ *   An array of catgeory IDs.
+ *
+ * @return
+ *   An array of category objects (NOT JET(indexed by cid)).
+ */
+function allegro_category_load_multiple($cids) {
+  $categories = db_select('allegro_category', 'c')
+    ->condition('c.parent', $cids, 'IN')
+    ->condition('c.country_code', variable_get('allegro_country_code', 1), '=')
+    ->fields('c', array('cid', 'name', 'parent', 'position', 'is_product_catalogue_enabled'))
+    ->orderBy('c.position')
+    ->execute()->fetchField();
+  return $categories;
+}
+
+/**
+ * Loads parent ID of category from the database.
+ *
+ * @param $cid
+ *   The category ID.
+ *
+ * @return
+ *   Parent category ID.
+ * 
+ * @todo Load parent object, not only id.
+ */
+function allegro_category_load_parent_id($cid) {
+  $parent_id = db_select('allegro_category', 'c')
+    ->condition('c.cid', $cid, '=')
+    ->fields('c', array('parent'))
+    ->execute()->fetchField();
+  return $parent_id;
+}
+
+/**
+ * Loads category parents from the database.
+ *
+ * @param $cid
+ *   The category ID.
+ *
+ * @return
+ *   An array of category objects (NOT(indexed by cid)).
+ */
+function allegro_category_load_parents($cid) {
+  $parents = array();
+  if ($cid) {
+    $parents[] = allegro_category_load($cid);
+    $n = 0;
+    while ($parent = allegro_category_load_parent_id($parents[$n])) {
+      $parents = array_merge($parents, array(reset($parent)));
+      $n++;
+    }
+  }
+  return $parents;
+}
+
+/**
+ * Loads category children from the database.
+ *
+ * @param $parent_id
+ *   The parent category ID.
+ *
+ * @return
+ *   An array of category objects (NOT(indexed by cid)).
+ */
+function allegro_category_load_children($parent_id = 0) {
+  if (!is_numeric($parent_id)) {
+    return array();
+  }
+  $categories = db_select('allegro_category', 'c')
+   ->condition('c.parent', $parent_id, '=')
+   ->condition('c.country_code', variable_get('allegro_country_code', 1), '=')
+   ->fields('c', array('cid', 'name', 'parent', 'position', 'is_product_catalogue_enabled'))
+   ->orderBy('c.position')
+   ->execute();
+  return $categories;
+}
+
+/**
+ * Download Allegro categories from SOAP service and insert to the database.
+ *
+ * @param $offset
+ *   Parameter which allows for controlling loading of new data portions (from 0).
+ * @param $package
+ *   Parameter which allows for defining a size of data portion (scope 1-5000; 5000 by default).
+ *
+ * @return
+ *   Number of downloaded and inserted categories.
+ */
+function allegro_category_download($offset, $package) {
+  $transaction = db_transaction();
+  try {
+    $allegro = allegro_client();
+    $response = $allegro->getCatsDataLimit($offset, $package);
+    $counter = 0;
+    foreach ($response->catsList->item as $i => $category) {
+      db_insert('allegro_category')
+       ->fields(array(
+         'country_code' => $allegro->countryCode,
+         'cid' => $category->catId,
+         'name' => $category->catName,
+         'parent' => $category->catParent,
+         'position' => $category->catPosition,
+         'is_product_catalogue_enabled' => $category->catIsProductCatalogueEnabled,
+       ))
+       ->execute();
+      $counter++;
+    }
+  }
+  catch (SoapFault $e) {
+    $transaction->rollback();
+    allegro_watchdog_exception('allegro_category', $e);
+    drupal_set_message($e->faultstring, 'error');
+  }
+  return $counter;
+}
+
+/**
+ * Delete all categories for given country.
+ * 
+ * @param int $country_code
+ *   Country code of categories to be deleted.
+ */
+function allegro_category_delete_by_country($country_code = NULL) {
+  db_delete('allegro_category')
+   ->condition('country_code', $country_code)
+   ->execute();
+}
+
+/*
+ * -----------------------------------------
+ * Hierarchical Select hooks implementation.
+ * -----------------------------------------
+ */
+
+/**
+ * Implements hook_hierarchical_select_params().
+ */
+function allegro_category_hierarchical_select_params() {
+  return array();
+}
+
+/**
+ * Implements hook_hierarchical_select_root_level().
+ */
+function allegro_category_hierarchical_select_root_level($params) {
+  return allegro_category_hierarchical_select_children(0, $params);
+}
+
+/**
+ * Implements hook_hierarchical_select_children().
+ */
+function allegro_category_hierarchical_select_children($parent, $params) {
+  $children = array();
+  $categories = allegro_category_load_children($parent);
+
+  foreach ($categories as $category) {
+    $children[$category->cid] = $category->name;
+  }
+
+  return $children;
+}
+
+/**
+ * Implements hook_hierarchical_select_lineag().
+ */
+function allegro_category_hierarchical_select_lineage($item, $params) {
+  $lineage = array();
+  do {
+    $lineage[] = $item;
+    $item = db_select('allegro_category', 'c')
+      ->condition('c.cid', $item, '=')
+      ->fields('c', array('parent'))
+      ->execute()->fetchField();
+  }
+  while ($item > 0);
+
+  return array_reverse($lineage);
+}
+
+/**
+ * Implements hook_hierarchical_select_valid_item().
+ */
+function allegro_category_hierarchical_select_valid_item($item, $params) {
+  if (is_numeric($item) && $item > 0) {
+    return TRUE;
+  }
+  else {
+    return FALSE;
+  }
+}
+
+/**
+ * Implements hook_hierarchical_select_implementation_info().
+ */
+function allegro_category_hierarchical_select_implementation_info() {
+  return array(
+    'hierarchy type' => t('Allegro Category'),
+    'entity type' => t('N/A'),
+  );
+}
+
+/**
+ * Helper function to apply the HS config to a form item.
+ */
+function _allegro_category_hierarchical_select_config() {
+  return array(
+    'module' => 'allegro_category',
+    'params' => array(),
+    'save_lineage' => 0,
+    'enforce_deepest' => 0,
+    'entity_count' => 0,
+    'require_entity' => 0,
+    'resizable' => 1,
+    'level_labels' => array(
+      'status' => 0,
+    ),
+    'dropbox' => array(
+      'status' => 0,
+    ),
+    'editability' => array(
+      'status' => 0,
+    ),
+    'animation_delay' => 1,
+    'render_flat_select' => 1,
+  );
+}
+
+/**
+ * Implements hook_admin_paths().
+ * @see https://drupal.org/node/1671336
+ */
+function allegro_category_admin_paths() {
+  $paths = array(
+    'hierarchical_select_ajax/*' => TRUE,
+  );
+  return $paths;
+}

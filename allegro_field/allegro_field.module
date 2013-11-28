@@ -1,0 +1,660 @@
+<?php
+
+// Define Allegro field types.
+define('ALLEGRO_FIELD_STRING', 1);
+define('ALLEGRO_FIELD_INTEGER', 2);
+define('ALLEGRO_FIELD_FLOAT', 3);
+define('ALLEGRO_FIELD_COMBOBOX', 4);
+define('ALLEGRO_FIELD_RADIOBUTTON', 5);
+define('ALLEGRO_FIELD_CHECKBOX', 6);
+define('ALLEGRO_FIELD_IMAGE', 7);
+define('ALLEGRO_FIELD_TEXT', 8);
+define('ALLEGRO_FIELD_DATETIME', 9);
+define('ALLEGRO_FIELD_DATE', 13);
+
+/**
+ * Implements hook_menu().
+ */
+function allegro_field_menu() {
+  $items['admin/allegro/settings/fields'] = array(
+    'title' => 'Fields',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('allegro_field_settings_form'),
+    'access arguments' => array('administer allegro fields'),
+    'file' => 'allegro_field.admin.inc',
+    'type' => MENU_LOCAL_TASK,
+  );
+  return $items;
+}
+
+/**
+ * Creates Allegro field ready to send via SOAP service.
+ * 
+ * @param int $fid
+ *   Field ID.
+ * @param string $type
+ *   Type of created field.
+ * @param string $value
+ *   Field value.
+ * 
+ * @return
+ *   Field defined as array containing all necessary informations.
+ */
+function allegro_field_create($fid = 0, $type = NULL, $value = NULL) {
+  $field = array(
+    'fid' => $fid,
+    'fvalueString' => '',
+    'fvalueInt' => 0,
+    'fvalueFloat' => 0,
+    'fvalueImage' => ' ', // When empty this field should contain space.
+    'fvalueDatetime' => 0,
+    'fvalueDate' => '',
+    'fvalueRangeInt' => array(
+      'fvalueRangeIntMin' => 0,
+      'fvalueRangeIntMax' => 0
+    ),
+    'fvalueRangeFloat' => array(
+      'fvalueRangeFloatMin' => 0,
+      'fvalueRangeFloatMax' => 0
+    ),
+    'fvalueRangeDate' => array(
+      'fvalueRangeDateMin' => '',
+      'fvalueRangeDateMax' => ''
+    )
+  );
+  // Check if this type of field really exists.
+  if ($value && $type && isset($field['fvalue' . ucfirst($type)])) {
+    $field['fvalue' . ucfirst($type)] = $value;
+  }
+  return $field;
+}
+
+/**
+ * Creates Allegro fields multple at once ready to send via SOAP service.
+ * 
+ * @param array $fields
+ *   Fields containing fid => value keypairs.
+ * 
+ * @return
+ *   Fields array containing all necessary informations (NOT JET(indexed by fid)).
+ */
+function allegro_field_create_multiple(Array $fields = array()) {
+  $sellformfields = allegro_field_load_multiple(array_keys($fields));
+  $allegro_fields = array();
+  foreach ($fields as $fid => $value) {
+    if (!empty($value) || $value === '0') {
+      $type = allegro_field_get_type($sellformfields[$fid]->res_type);
+      $allegro_fields[] = allegro_field_create($fid, $type, $value);
+      //TODO: $allegro_fields[$fid] = allegro_field_create($fid, $type, $value);
+    }
+  }
+  return $allegro_fields;
+}
+
+/**
+ * Function return information which fields are supported.
+ * 
+ * @return
+ *   Return available fields as array.
+ * 
+ * @todo Create UI for selecting this fields.
+ */
+function allegro_get_fields() {
+  return array(
+    1, // Nazwa przedmiotu (string)
+    2, // Kategoria (int)
+    // 3, // Data rozpoczęcia (timestamp/int)
+    4, // Czas trawania (int)
+    5, // Liczba sztuk (int)
+    // 6, // Cena wywoławcza w walucie używanej w danym serwisie
+    // 7, // Cena minimalna (float)
+    8, // Cena kup teraz (float)
+    // 9, // Numer kraju, pokrywa się z numerem kraju używanym do wybierania wersji serwisu. (int)
+    10, // Jedno z województw, ich listę można pobrać z informacji o tym polu. (int)
+    11, // Miejscowość (string)
+    12, // Koszt przesyłki pokrywa (int/bool)
+    13, // Opcje dot. transportu - nałożenie flag (int - OR)
+    14, // Formy płatności (int - OR)
+    15, // Opcje dodatkowe (int - OR)
+    16, 17, 18, 19, 20, 21, 22, 23, // Zdjęcie (16-23 Maksymalnie 8 zdjęć)
+    24, // Opis przedmiotu (string)
+    27, // Dodatkowe informacje o przesyłce i płatności
+    32, // Kod pocztowy
+    33, // Numer konta
+    34, // Drugi numer konta
+    // Przesyłka
+    35, // Darmowe opcje przesyłki
+    36, // Paczka pocztowa ekonomiczna (pierwsza sztuka)
+    136, // Paczka pocztowa ekonomiczna (kolejna sztuka)
+    236, // Paczka pocztowa ekonomiczna (ilość w paczce)
+    37, // List ekonomiczny (pierwsza sztuka)
+    137, // List ekonomiczny (kolejna sztuka)
+    237, // List ekonomiczny (ilość w paczce)
+    38, // Paczka pocztowa priorytetowa (pierwsza sztuka)
+    138, // Paczka pocztowa priorytetowa (kolejna sztuka)
+    238, // Paczka pocztowa priorytetowa (ilość w paczce)
+    39, // List priorytetowy (pierwsza sztuka)
+    139, // List priorytetowy (kolejna sztuka)
+    239, // List priorytetowy (ilość w paczce)
+    40, // Przesyłka pobraniowa (pierwsza sztuka)
+    140, // Przesyłka pobraniowa (kolejna sztuka) Tylko w testwebapi.pl) / Ile czasu zajmie ci wysłanie przedmiotu
+    240, // Przesyłka pobraniowa (ilość w paczce)
+    41, // List polecony ekonomiczny (pierwsza sztuka)
+    141, // List polecony ekonomiczny (kolejna sztuka)
+    241, // List polecony ekonomiczny (ilość w paczce)
+    42, // Przesyłka pobraniowa priorytetowa (pierwsza sztuka)
+    142, // Przesyłka pobraniowa priorytetowa (kolejna sztuka)
+    242, // Przesyłka pobraniowa priorytetowa (ilość w paczce)
+    43, // List polecony priorytetowy (pierwsza sztuka)
+    143, // List polecony priorytetowy (kolejna sztuka)
+    243, // List polecony priorytetowy (ilość w paczce)
+    44, // Przesyłka kurierska (pierwsza sztuka)
+    144, // Przesyłka kurierska (kolejna sztuka)
+    244, // Przesyłka kurierska (ilość w paczce)
+    45, // Przesyłka kurierska pobraniowa (pierwsza sztuka)
+    145, // Przesyłka kurierska pobraniowa (kolejna sztuka)
+    245, // Przesyłka kurierska pobraniowa (ilość w paczce)
+    46, // Odbiór w punkcie po przedpłacie - PACZKA W RUCHu (pierwsza sztuka)
+    146, // Odbiór w punkcie po przedpłacie - PACZKA W RUCHu (kolejna sztuka)
+    246, // Odbiór w punkcie po przedpłacie - PACZKA W RUCHu (ilość w paczce)
+    47, // Odbiór w punkcie po przedpłacie - Paczkomaty 24/7 (pierwsza sztuka)
+    147, // Odbiór w punkcie po przedpłacie - Paczkomaty 24/7 (kolejna sztuka)
+    247, // Odbiór w punkcie po przedpłacie - Paczkomaty 24/7 (ilość w paczce)
+    48, // Odbiór w punkcie - PACZKA W RUCHu (pierwsza sztuka)
+    148, // Odbiór w punkcie - PACZKA W RUCHu (kolejna sztuka)
+    248, // Odbiór w punkcie - PACZKA W RUCHu (ilość w paczce)
+    49, // Odbiór w punkcie - Paczkomaty 24/7 (pierwsza sztuka)
+    149, // Odbiór w punkcie - Paczkomaty 24/7 (kolejna sztuka)
+    249, // Odbiór w punkcie - Paczkomaty 24/7 (ilość w paczce)
+    50, // Odbiór w punkcie po przedpłacie - DHL SERVICE POINT (pierwsza sztuka)
+    150, // Odbiór w punkcie po przedpłacie - DHL SERVICE POINT (kolejna sztuka)
+    250, // Odbiór w punkcie po przedpłacie - DHL SERVICE POINT (ilość w paczce)
+    51, // Odbiór w punkcie po przedpłacie - E-PRZESYŁKA (pierwsza sztuka)
+    151, // Odbiór w punkcie po przedpłacie - E-PRZESYŁKA (kolejna sztuka)
+    251, // Odbiór w punkcie po przedpłacie - E-PRZESYŁKA (ilość w paczce)
+    52, // Odbiór w punkcie - E-PRZESYŁKA (pierwsza sztuka)
+    152, // Odbiór w punkcie - E-PRZESYŁKA (kolejna sztuka)
+    252, // Odbiór w punkcie - E-PRZESYŁKA (ilość w paczce)
+    340, // Wysyłka w ciągu
+  );
+}
+
+/**
+ * Loads a "sell form field" object from the database.
+ *
+ * @param int $fid
+ *   The field ID.
+ *
+ * @return
+ *   A fully-populated field object, or FALSE if the field is not found.
+ */
+function allegro_field_load($fid) {
+  return allegro_field_load_multiple((array) $fid);
+}
+
+/**
+ * Loads "sell form fields" from the database.
+ *
+ * @param array $fids
+ *   An array of fields IDs.
+ *
+ * @return
+ *   An array of field objects indexed by fid.
+ */
+function allegro_field_load_multiple($fids) {
+  $result = db_select('allegro_field', 'f')
+   ->condition('f.fid', $fids, 'IN')
+   ->condition('f.country_code', variable_get('allegro_country_code', 1), '=')
+   ->fields('f', array(
+     'country_code', 'fid', 'title', 'cat', 'type', 'res_type', 'def_value', 'opt',
+     'pos', 'length', 'min_value', 'max_value', 'description', 'opts_values',
+     'field_desc', 'param_id', 'param_values', 'parent_id', 'parent_value',
+     'unit', 'options',
+   ))
+   ->orderBy('f.fid')
+   ->execute();
+
+  $sellformfields = array();
+  while ($sellformfield = $result->fetch()) {
+    $sellformfields[$sellformfield->fid] = $sellformfield;
+  }
+  return $sellformfields;
+}
+
+/**
+ * Loads Allegro fields from the database for specified category.
+ *
+ * @param int $cid
+ *   Category ID.
+ *
+ * @return
+ *   An array of field objects indexed by fid.
+ */
+function allegro_field_load_multiple_for_category($cid) {
+  $result = db_select('allegro_field', 'f')
+   ->condition('f.cat', $cid, '=')
+   ->condition('f.country_code', variable_get('allegro_country_code', 1), '=')
+   ->fields('f', array(
+     'country_code', 'fid', 'title', 'cat', 'type', 'res_type', 'def_value', 'opt',
+     'pos', 'length', 'min_value', 'max_value', 'description', 'opts_values',
+     'field_desc', 'param_id', 'param_values', 'parent_id', 'parent_value',
+     'unit', 'options',
+   ))
+   ->orderBy('f.fid')
+   ->execute();
+
+  $sellformfields = array();
+  while ($sellformfield = $result->fetch()) {
+    $sellformfields[$sellformfield->fid] = $sellformfield;
+  }
+  return $sellformfields;
+}
+
+/**
+ * Loads Allegro fields from the database for specified categories.
+ *
+ * @param array $cids
+ *   Category IDs.
+ *
+ * @return
+ *   An array of field objects indexed by fid.
+ */
+function allegro_field_load_for_multiple_categories($cids = array()) {
+  $fields = array();
+  foreach ($cids as $cid) {
+    $fields += allegro_field_load_multiple_for_category($cid);
+  }
+  return $fields;
+}
+
+/**
+ * Loads Allegro fields from the database for specified category and its parents.
+ *
+ * @param int $cid
+ *   Category IDs.
+ *
+ * @return
+ *   An array of field objects indexed by fid.
+ */
+function allegro_field_load_for_category_and_parents($cid) {
+  $lineage = array($cid);
+  $lineage += allegro_category_load_parents($cid);
+
+  return allegro_field_load_for_multiple_categories($lineage);
+}
+
+/**
+ * Split field options (for checkboxes and select lists).
+ *
+ * @param string $string
+ *   String containing options separeted width pipe "|" sign.
+ *
+ * @return
+ *   An array of options ready tu put into form element supporting "#options".
+ */
+function allegro_field_split($string) {
+  return explode('|', $string);
+}
+
+/**
+ * Creates options array from two strings splitted with pipe "|".
+ *
+ * @param string $keys
+ *   Options keys.
+ * @param string $values
+ *   Options values.
+ *
+ * @return
+ *   An array of options ready tu put into form element supporting "#options".
+ */
+function allegro_field_create_options($keys, $values) {
+  $keys = allegro_field_split($keys);
+  $values = allegro_field_split($values);
+  $options = array_combine($keys, $values);
+
+  foreach ($options as $key => $value) {
+    if ($value == '-') {
+      unset($options[$key]);
+    }
+  }
+
+  return $options;
+}
+
+/**
+ * Function already unused.
+ * 
+ * @param string $human_readable
+ *   Human readeable string.
+ * 
+ * @return
+ *   Machine readable string.
+ */
+function allegro_field_machine_name($human_readable) {
+  return preg_replace('@[^a-z0-9_]+@', '_', drupal_strtolower($human_readable));
+}
+
+/**
+ * Get field name from integer defining its type.
+ * 
+ * @param int $type
+ *   Field type number.
+ * 
+ * @return
+ *   Field type name.
+ */
+function allegro_field_get_type($type) {
+  switch ($type) {
+    case ALLEGRO_FIELD_STRING:
+      return 'string';
+    case ALLEGRO_FIELD_INTEGER:
+      return 'int';
+    case ALLEGRO_FIELD_FLOAT:
+      return 'float';
+    case ALLEGRO_FIELD_IMAGE:
+      return 'image';
+    case ALLEGRO_FIELD_DATETIME:
+      return 'datetime';
+    case ALLEGRO_FIELD_DATE:
+      return 'date';
+  }
+}
+
+/**
+ * Calculate bitmask from field options values.
+ * 
+ * @param array $options
+ *   Options values as integers. 
+ * 
+ * @return
+ *   Calculated field value.
+ * 
+ * @see http://allegro.pl/webapi/documentation.php/show/id,1110#method-output
+ * 
+ */
+function allegro_field_calculate_options($options = array()) {
+  $options = (array) $options;
+  $sum = 0;
+  foreach ($options as $option) {
+    $sum = $sum | $option;
+  }
+  return $sum;
+}
+
+/**
+ * Converts Allegro field to Drupal Form API element.
+ * 
+ * @param object $allego_field
+ *   Allegro field object loaded from database.
+ * 
+ * @return array
+ *   Form API element.
+ */
+function allegro_field_convert($allego_field) {
+  // http://allegro.pl/webapi/documentation.php/show/id,91
+  // JEŚLI LISTA JEST SELECTEM POWINIENEM DODAĆ #validate PONIEWAŻ WOJEWÓDZTWO
+  // NIE JEST SPRAWDZANE POD KONTEM OBLIGATORYJNOŚCI
+  // Określenie typu pola w formularzu sprzedaży (1 - string, 2 - integer, 3 - float, 4 - combobox, 5 - radiobutton, 6 - checkbox, 7 - image (base64Binary), 8 - text (textarea), 9 - datetime (Unix time), 13 - date). 
+
+  $field = array();
+
+  $field['#title'] = stripslashes($allego_field->title);
+
+  if (in_array($allego_field->type, array(ALLEGRO_FIELD_COMBOBOX, ALLEGRO_FIELD_RADIOBUTTON, ALLEGRO_FIELD_CHECKBOX))) {
+    $field['#default_value'] = $allego_field->def_value;
+  }
+
+  $field['#sellformfield'] = $allego_field;
+  $field['#description'] = stripslashes($allego_field->field_desc);
+  $field['#size'] = $allego_field->length;
+//  $field['#name'] = $allego_field->fid;
+
+  if ($allego_field->opt == Allegro::FIELD_REQUIRED) {
+    $field['#required'] = TRUE;
+  }
+
+  // Shipping costs
+  if ($allego_field->def_value == -1) {
+    unset($field['#default_value']);
+    unset($field['#description']);
+  }
+
+  if (!empty($allego_field->unit)) {
+    $field['#field_suffix'] = $allego_field->unit;
+  }
+
+  if ($allego_field->type == ALLEGRO_FIELD_CHECKBOX && $allego_field->options == 6) {
+    $allego_field->type = ALLEGRO_FIELD_COMBOBOX;
+  }
+
+  switch ($allego_field->type) {
+    case ALLEGRO_FIELD_STRING:
+      $field['#type'] = 'textfield';
+      $field['#maxlength'] = $allego_field->length;
+      unset($field['#size']);
+      break;
+    case ALLEGRO_FIELD_INTEGER:
+      $field['#type'] = 'textfield';
+      $field['#maxlength'] = $allego_field->length;
+      break;
+    case ALLEGRO_FIELD_FLOAT:
+      $field['#type'] = 'textfield';
+      $field['#maxlength'] = $allego_field->length;
+      break;
+    case ALLEGRO_FIELD_COMBOBOX:
+      $field['#type'] = 'select';
+      $field['#size'] = 1;
+      $field['#options'] = allegro_field_create_options($allego_field->opts_values, $allego_field->description);
+      break;
+    case ALLEGRO_FIELD_RADIOBUTTON:
+      $field['#type'] = 'radios';
+      $field['#options'] = allegro_field_create_options($allego_field->opts_values, $allego_field->description);
+      break;
+    case ALLEGRO_FIELD_CHECKBOX:
+      $field['#type'] = 'checkboxes';
+      $field['#options'] = allegro_field_create_options($allego_field->opts_values, $allego_field->description);
+      $field['#default_value'] = array($field['#default_value']);
+      break;
+    case ALLEGRO_FIELD_IMAGE:
+      $field['#type'] = 'managed_file';
+//      $field['#upload_validators'] = array(
+//        'file_validate_extensions' => array('gif png jpg jpeg'),
+//        'file_validate_size' => array(0.3 * 1024 * 1024),
+//        'file_validate_image_resolution' => array(100 * 100)
+//      );
+      break;
+    case ALLEGRO_FIELD_TEXT:
+      $field['#type'] = 'textarea';
+      //$field['format']['format']['#access'] = FALSE;
+      break;
+    case ALLEGRO_FIELD_DATETIME:
+      $field['#type'] = 'date';
+      break;
+    case ALLEGRO_FIELD_DATE:
+      $field['#type'] = 'date';
+      break;
+  }
+  return $field;
+}
+
+/**
+ * Converts Allegro fields to form API elements.
+ * 
+ * @param array $sellformfields
+ *   Array containing Allegro field objects loaded from database.
+ * @param bool $show_titles
+ *   Show fields titles.
+ * @param bool $generate_keys
+ *  Automatically generate keys for form API elements.
+ * 
+ * @return array
+ *   Array of form API elements.
+ */
+function allegro_field_convert_multiple($sellformfields = array(), $show_titles = TRUE, $generate_keys = TRUE) {
+  $fields = array();
+  foreach ($sellformfields as $key => $sellformfield) {
+    if (is_numeric($key)) {
+      if ($generate_keys) {
+        $key = 'fid_' . $sellformfield->fid;
+      }
+      else {
+        $key = $sellformfield->fid;
+      }
+    }
+    $fields[$key] = allegro_field_convert($sellformfield);
+    if (!$show_titles) {
+      unset($fields[$key]['#title']);
+    }
+  }
+  return $fields;
+}
+
+/**
+ * Converts Allegro fields to form API elements in given field ID range.
+ * 
+ * @param array $sellformfields
+ *   An array containing Allegro field objects loaded from database.
+ * @param int $fid_from
+ *   Field ID to start from.
+ * @param int $fid_to
+ *   Field ID to end on.
+ * @param bool $show_titles
+ *   Show fields titles.
+ * 
+ * @return array
+ *   An array of form API elements.
+ */
+function allegro_field_convert_range($sellformfields = array(), $fid_from = 0, $fid_to = 0, $show_titles = TRUE) {
+  $fields = array();
+  for ($i = $fid_from; $i <= $fid_to; $i++) {
+    if (empty($sellformfields[$i])) {
+      continue;
+    }
+    $fields[$i] = allegro_field_convert($sellformfields[$i]);
+    if (!$show_titles) {
+      unset($fields[$i]['#title']);
+    }
+  }
+  return $fields;
+}
+
+/**
+ * Convert to form API elements of shipping service fields and create a table row containing this fields.
+ * 
+ * @param int $fid
+ *   Field ID, also indicating group of shipping fields.
+ *   For FID=3 function will convert fields with FID=(3, 30, 300).
+ * @param array $sellformfields
+ *    An array containing Allegro field objects loaded from database.
+ * 
+ * @return array
+ *   An array of form API elements ready to insert as row in form table.
+ */
+function allegro_field_convert_shipping_fields_row($fid, $sellformfields) {
+  $row = array();
+  for ($i = $fid; $i <= (200 + $fid); $i += 100) {
+    if (empty($sellformfields[$i])) {
+      continue;
+    }
+    if ($i == $fid) {
+      $title = explode('(', $sellformfields[$i]->title);
+      $row[] = $title[0];
+    }
+    $field = allegro_field_convert($sellformfields[$i]);
+    if ($i == $fid || $i == (100 + $fid)) {
+      $field['#field_suffix'] = 'zł';
+    }
+    // Title of thoose fields is placed in table header.
+    unset($field['#title']);
+    $row[$i] = $field;
+  }
+  return $row;
+}
+
+/**
+ * Convert to form API elements of shipping service fields and create a table containing this fields.
+ * 
+ * @param int $fids
+ *   Field IDs to convert and put in table.
+ * @param array $sellformfields
+ *    An array containing Allegro field objects loaded from database.
+ * 
+ * @return array
+ *   An array of form API elements ready to insert as row in form table.
+ */
+function allegro_field_convert_shipping_fields_table($fids, $sellformfields) {
+  $rows = array();
+  foreach ($fids as $fid) {
+    $rows[] = allegro_field_convert_shipping_fields_row($fid, $sellformfields);
+  }
+  return $rows;
+}
+
+/**
+ * Delete all fields for given country.
+ * 
+ * @param int $country_code
+ *   Country code of fields to be deleted.
+ */
+function allegro_field_delete_by_country($country_code = NULL) {
+  db_delete('allegro_field')
+   ->condition('country_code', $country_code)
+   ->execute();
+}
+
+/**
+ * Download Allegro fields from SOAP service and insert to the database.
+ *
+ * @param $offset
+ *   Parameter which allows for controlling loading of new data bits (bid numbers are indexed from 0).
+ * @param $package
+ *   Parameter which allows for defining a size of data bits (min. 1, default: 50).
+ *
+ * @return
+ *   Number of downloaded and inserted fields.
+ */
+function allegro_field_download($offset, $package) {
+  $transaction = db_transaction();
+  try {
+    $allegro = allegro_client();
+    $response = $allegro->getSellFormFieldsLimit($offset, $package);
+    $counter = 0;
+    foreach ($response->sellFormFields->item as $i => $field) {
+      db_insert('allegro_field')
+       ->fields(array(
+         'country_code' => $allegro->countryCode,
+         'fid' => $field->sellFormId,
+         'title' => $field->sellFormTitle,
+         'cat' => $field->sellFormCat,
+         'type' => $field->sellFormType,
+         'res_type' => $field->sellFormResType,
+         'def_value' => $field->sellFormDefValue,
+         'opt' => $field->sellFormOpt,
+         'pos' => $field->sellFormPos,
+         'length' => $field->sellFormLength,
+         'min_value' => $field->sellMinValue,
+         'max_value' => $field->sellMaxValue,
+         'description' => $field->sellFormDesc,
+         'opts_values' => $field->sellFormOptsValues,
+         'field_desc' => $field->sellFormFieldDesc,
+         'param_id' => $field->sellFormParamId,
+         'param_values' => $field->sellFormParamValues,
+         'parent_id' => $field->sellFormParentId,
+         'parent_value' => $field->sellFormParentValue,
+         'unit' => $field->sellFormUnit,
+         'options' => $field->sellFormOptions,
+       ))
+       ->execute();
+      $counter++;
+    }
+
+    variable_set('allegro_field_ver_key', $response->verKey);
+    variable_set('allegro_field_ver_str', $response->verStr);
+  }
+  catch (SoapFault $e) {
+    $transaction->rollback();
+    allegro_watchdog_exception('allegro_field', $e);
+    drupal_set_message($e->faultstring, 'error');
+  }
+  return $counter;
+}

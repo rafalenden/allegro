@@ -1,0 +1,123 @@
+<?php
+
+/**
+ * Implements hook_permission().
+ */
+function allegro_permission() {
+  return array(
+    'administer allegro' => array(
+      'title' => t('Administer Allegro'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_menu().
+ */
+function allegro_menu() {
+  $items['admin/allegro'] = array(
+    'title' => 'Allegro',
+    'page callback' => 'drupal_get_form',
+    'access arguments' => array('administer allegro'),
+    'page arguments' => array('allegro_settings_form'),
+    'file' => 'allegro.admin.inc',
+  );
+  $items['admin/allegro/settings'] = array(
+    'title' => 'Settings',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => -10,
+  );
+  return $items;
+}
+
+function allegro_client($login = TRUE, $encode = TRUE, $cache = TRUE) {
+  if ($cache) {
+    $allegro = &drupal_static(__FUNCTION__);
+  }
+
+  if (empty($allegro) || $allegro->logged != $login) {
+    try {
+      $allegro = new Allegro();
+
+      $allegro->userLogin = variable_get('allegro_login');
+      $allegro->userPassword = variable_get('allegro_password');
+      $allegro->webapiKey = variable_get('allegro_webapikey');
+      $allegro->countryCode = variable_get('allegro_country_code');
+
+      if ($login) {
+        $allegro->login();
+      }
+    }
+    catch (SoapFault $e) {
+      drupal_set_message($e->getMessage(), 'error');
+      watchdog_exception('allegro', $e);
+      unset($allegro);
+    }
+  }
+
+  return !empty($allegro) ? $allegro : FALSE;
+}
+
+function allegro_test_connection($login, $password, $webapikey, $countryCode = 1) {
+  try {
+    Allegro::testConnection($login, $password, $webapikey, $countryCode);
+    return TRUE;
+  }
+  catch (SoapFault $e) {
+    drupal_set_message(t('Allegro: %fault', array('%fault' => $e->faultstring)), 'error');
+    watchdog_exception('allegro', $e);
+    return FALSE;
+  }
+}
+
+/**
+ * Convert object to array
+ *
+ * @param object $object
+ * @return array
+ */
+function allegro_object2array($object) {
+  if (!is_object($object) && !is_array($object)) {
+    return $object;
+  }
+  if (is_object($object)) {
+    $object = get_object_vars($object);
+  }
+  return array_map('allegro_object2array', $object);
+}
+
+/*
+ * Unused.
+ * Resizes images to pass Allegro validation.
+ */
+function allegro_resize_image($url) {
+  $image = file_get_contents($url);
+
+  // właśnie tutaj używamy Base64 ręcznie, ale nigdzie indziej!
+  while (strlen(base64_encode($image)) > 200000) {
+    $temp = imagecreatefromstring($image);
+    $x = ceil(0.9 * imagesx($temp));
+    $y = ceil(0.9 * imagesy($temp));
+
+    $image = imagecreatetruecolor($x, $y);
+    imagecopyresized($image, $temp, 0, 0, 0, 0, $x, $y, imagesx($temp), imagesy($temp));
+
+    imagejpeg($image, 'temp.jpg', 75);
+    $image = file_get_contents('temp.jpg');
+    unlink('temp.jpg');
+  }
+
+  return $image;
+}
+
+function allegro_watchdog_exception($type, Exception $exception, $message = NULL, $variables = array(), $severity = WATCHDOG_ERROR, $link = NULL) {
+  return watchdog_exception($type, $exception, nl2br(check_plain($exception)));
+}
+
+function allegro_watchdog_debug($message) {
+  watchdog('allegro', '<pre>' . print_r($message, TRUE) . '</pre>');
+}
+
+function allegro_is_configured_correctly() {
+  return allegro_client();
+}

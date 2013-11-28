@@ -1,0 +1,16 @@
+name = Allegro Item
+description = Provides entity type for storing Allegro items.
+package = Allegro
+core = 7.x
+
+; Contrib modules
+dependencies[] = entity
+dependencies[] = hierarchical_select
+dependencies[] = tableform
+
+; Allegro modules
+dependencies[] = allegro
+dependencies[] = allegro_category
+dependencies[] = allegro_field
+
+files[] = allegro_item.controller.inc

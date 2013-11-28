@@ -1,0 +1,55 @@
+<?php
+
+/**
+ * Implements hook_schema();
+ */
+function allegro_category_schema() {
+  $schema['allegro_category'] = array(
+    'description' => 'Table for Allegro categories.',
+    'fields' => array(
+      'country_code' => array(
+        'description' => 'Country identifier (a list of country identifiers can be loaded using the doGetCountries method).',
+        'type' => 'int',
+      ),
+      'cid' => array(
+        'description' => 'Category identifier.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'name' => array(
+        'description' => 'Category name.',
+        'type' => 'varchar',
+        'length' => 255,
+      ),
+      'parent' => array(
+        'description' => 'Supracategory identifier (or 0 for main categories).',
+        'type' => 'int',
+      ),
+      'position' => array(
+        'description' => 'Position of a category in comparison with other categories of the same tier (indexed from 0).',
+        'type' => 'int',
+      ),
+      'is_product_catalogue_enabled' => array(
+        'description' => 'Information whether the Product Catalogue is available in the category.',
+        'type' => 'int',
+      ),
+    ),
+    'primary key' => array('country_code', 'cid'),
+    'indexes' => array(
+      'country_code' => array('country_code'),
+      'cid' => array('cid'),
+      'parent' => array('parent'),
+    ),
+  );
+  
+  return $schema;
+}
+
+/**
+ * Implements of hook_uinstall().
+ */
+function allegro_category_uinstall() {
+  variable_del('allegro_category_last_update');
+  allegro_category_delete_by_country();
+}

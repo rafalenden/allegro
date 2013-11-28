@@ -1,0 +1,6 @@
+name = Allegro Field
+description = Support for Allegro fields.
+package = Allegro
+core = 7.x
+
+dependencies[] = allegro

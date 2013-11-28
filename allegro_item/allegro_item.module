@@ -1,0 +1,304 @@
+<?php
+
+/**
+ * Implements hook_entity_info().
+ */
+function allegro_item_entity_info() {
+  $return['allegro_item'] = array(
+    'label' => t('Allegro item'),
+    'controller class' => 'AllegroItemController',
+    'base table' => 'allegro_item',
+    'uri callback' => 'allegro_item_uri',
+    'fieldable' => FALSE,
+    'entity keys' => array(
+      'id' => 'id',
+      'label' => 'title',
+    ),
+    'static cache' => TRUE,
+    'bundles' => array(
+      'allegro_item' => array(
+        'label' => t('Allegro item'),
+        'admin' => array(
+          'path' => 'admin/allegro/settings',
+          'access arguments' => array('administer allegro items'),
+        ),
+      ),
+    ),
+    'view modes' => array(
+      'full' => array(
+        'label' => t('Full content'),
+        'custom settings' => FALSE,
+      ),
+      'teaser' => array(
+        'label' => t('Teaser'),
+        'custom settings' => FALSE,
+      ),
+    ),
+  );
+  return $return;
+}
+
+/**
+ * Entity uri callback.
+ */
+function allegro_item_uri($allegro_item) {
+  return array(
+    'path' => allegro_item_url($allegro_item),
+  );
+}
+
+/**
+ * Entity innternal URL.
+ */
+function allegro_item_url($allegro_item) {
+  return 'admin/allegro/item/' . $allegro_item->id;
+}
+
+/**
+ * Creates URL of Aallegro item.
+ * 
+ * @param int $item_id
+ *   External Allegro item ID.
+ * @param int $country_code
+ *   Country code of Allegro item.
+ * 
+ * @return string
+ *   External URL (with protocol) to Allegro item.
+ */
+function allegro_item_url_external($item_id, $country_code = NULL) {
+  if (empty($country_code)) {
+    $country_code = variable_get('country_code', 1);
+  }
+  $countries = Allegro::getCountries();
+  return 'http://' . $countries[$country_code] . '/show_item.php?item=' . $item_id;
+}
+
+/**
+ * Implements hook_field_extra_fields().
+ */
+function allegro_item_field_extra_fields() {
+  $return['allegro_item']['allegro_item'] = array(
+    'form' => array(
+      'title' => array(
+        'label' => t('Title'),
+        'description' => t('The name of the Allegro item.'),
+        'weight' => -5,
+      ),
+    ),
+    'display' => array(
+      'title' => array(
+        'label' => t('Title'),
+        'description' => t('The name of the Allegro item.'),
+        'weight' => -5,
+      ),
+      'item_id' => array(
+        'label' => t('Item ID'),
+        'description' => t('External item ID.'),
+        'weight' => 0,
+      ),
+    ),
+  );
+  return $return;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function allegro_item_permission() {
+  return array(
+    'administer allegro items' => array(
+      'title' => t('Administer Allegro items'),
+    ),
+    'create allegro items' => array(
+      'title' => t('Create Allegro items'),
+    ),
+    'update allegro items' => array(
+      'title' => t('Update Allegro items'),
+    ),
+    'view allegro items' => array(
+      'title' => t('View Allegro items'),
+    ),
+    'delete allegro items' => array(
+      'title' => t('Delete Allegro items'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_menu().
+ */
+function allegro_item_menu() {
+  $items['admin/allegro'] = array(
+    'title' => 'Allegro',
+    'page callback' => 'allegro_item_list',
+    'access arguments' => array('administer allegro items'),
+    'file' => 'allegro_item.admin.inc',
+  );
+  $items['admin/allegro/items'] = array(
+    'title' => 'List',
+    'page callback' => 'allegro_item_list',
+    'access arguments' => array('administer allegro items'),
+    'file' => 'allegro_item.admin.inc',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+
+  // Settings
+  $items['admin/allegro/settings'] = array(
+    'title' => 'Settings',
+    'page callback' => 'drupal_get_form',
+    'access arguments' => array('administer allegro'),
+    'type' => MENU_LOCAL_TASK,
+    'page arguments' => array('allegro_settings_form'),
+    'file' => 'allegro.admin.inc',
+    'file path' => drupal_get_path('module', 'allegro'),
+  );
+  $items['admin/allegro/settings/general'] = array(
+    'title' => 'General',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => -10,
+  );
+  // Allegro item
+  $items['admin/allegro/item/add'] = array(
+    'title' => 'Add Allegro item',
+    'page callback' => 'allegro_item_add',
+    'access arguments' => array('create allegro items'),
+    'file' => 'allegro_item.admin.inc',
+    'type' => MENU_LOCAL_ACTION,
+  );
+  $items['admin/allegro/item/%allegro_item'] = array(
+    'title callback' => 'allegro_item_page_title',
+    'title arguments' => array(3),
+    'page callback' => 'allegro_item_view',
+    'page arguments' => array(3),
+    'access arguments' => array('view allegro items'),
+    'type' => MENU_CALLBACK,
+    'file' => 'allegro_item.admin.inc',
+  );
+  $items['admin/allegro/item/%allegro_item/view'] = array(
+    'title' => 'View',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => -10,
+  );
+//  $items['admin/allegro/item/%allegro_item/edit'] = array(
+//    'title' => 'Edit',
+//    'page callback' => 'allegro_item_page_edit',
+//    'page arguments' => array(1),
+//    'access arguments' => array('update allegro items'),
+//    'type' => MENU_LOCAL_TASK,
+//    'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
+//    'file' => 'allegro_item.admin.inc',
+//  );
+//  $items['admin/allegro/item/%allegro_item/delete'] = array(
+//    'title' => 'Delete',
+//    'page callback' => 'drupal_get_form',
+//    'page arguments' => array('allegro_item_delete_confirm', 1),
+//    'access arguments' => array('delete allegro items'),
+//    'weight' => 1,
+//    'type' => MENU_LOCAL_TASK,
+//    'context' => MENU_CONTEXT_INLINE,
+//    'file' => 'allegro_item.admin.inc',
+//  );
+
+  return $items;
+}
+
+/**
+ * Sets the page title based on the specified Allegro item.
+ *
+ * @param $allegro_item
+ *   The Allegro item object.
+ */
+function allegro_item_page_title($allegro_item) {
+  return $allegro_item->title;
+}
+
+/**
+ * Load Allegro item entities from the database.
+ *
+ * @see entity_load()
+ *
+ * @param $ids
+ *   An array of Allegro item IDs.
+ * @param $conditions
+ *   An array of conditions on the {allegro_item} table in the form 'field' => $value.
+ * @param $reset
+ *   Whether to reset the internal entity_load cache.
+ *
+ * @return object
+ *   An array of Allegro item objects indexed by nid.
+ */
+function allegro_item_load_multiple($ids = array(), $conditions = array(), $reset = FALSE) {
+  return entity_load('allegro_item', $ids, $conditions, $reset);
+}
+
+/**
+ * Load an Allegro item object from the database.
+ *
+ * @param $id
+ *   The Allegro item ID.
+ * @param $vid
+ *   The revision ID.
+ * @param $reset
+ *   Whether to reset the allegro_load_multiple cache.
+ *
+ * @return object
+ *   A fully-populated Allegro item object.
+ */
+function allegro_item_load($id = NULL, $reset = FALSE) {
+  $ids = (isset($id) ? array($id) : array());
+  $conditions = array();
+  $allegro_item = allegro_item_load_multiple($ids, $conditions, $reset);
+  return $allegro_item ? reset($allegro_item) : FALSE;
+}
+
+/**
+ * Save an Allegro item.
+ *
+ * @param $allegro_item
+ *   The Allegro item to be saved.
+ * 
+ * @return object
+ *   The saved Allegro item.
+ */
+function allegro_item_save($allegro_item) {
+  return entity_get_controller('allegro_item')->save($allegro_item);
+}
+
+/**
+ * Returns an initialized Allegro item object.
+ *
+ * @param $type
+ *   The machine-readable type of the Allegro item.
+ *
+ * @return object
+ *   An Allegro item object with all default fields initialized.
+ */
+function allegro_item_new($type = 'allegro_item') {
+  return entity_get_controller('allegro_item')->create($type);
+}
+
+/**
+ * Deletes an Allegro item by ID.
+ *
+ * @param $id
+ *   The ID of the Allegro item to delete.
+ *
+ * @return bool
+ *   TRUE on success, FALSE otherwise.
+ */
+function allegro_item_delete($id) {
+  return allegro_item_delete_multiple(array($id));
+}
+
+/**
+ * Deletes multiple Allegro items by ID.
+ *
+ * @param $ids
+ *   An array of Allegro item IDs to delete.
+ *
+ * @return bool
+ *   TRUE on success, FALSE otherwise.
+ */
+function allegro_item_delete_multiple($ids) {
+  return entity_get_controller('allegro_item')->delete($ids);
+}

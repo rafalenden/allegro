@@ -1,0 +1,159 @@
+<?php
+
+/**
+ * Implements hook_schema();
+ */
+function allegro_field_schema() {
+  // Table form fields information (kind of instances).
+  $schema['allegro_field'] = array(
+    'description' => 'Table for Allegro item fields.',
+    'fields' => array(
+      'country_code' => array(
+        'description' => 'Country identifier (a list of country identifiers can be loaded using the doGetCountries method).',
+        'type' => 'int',
+      ),
+      'fid' => array(
+        'description' => 'Field identifier.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'title' => array(
+        'description' => 'Field name.',
+        'type' => 'varchar',
+        'length' => 255,
+      ),
+      'cat' => array(
+        'description' => 'Identifier of category to which the field refers (it also relates to all subcategories of this category). 0 means that the parameter refers to all the categories.',
+        'type' => 'int',
+      ),
+      'type' => array(
+        'description' => 'Definition of a field type in sale form (1 - string, 2 - integer, 3 - float, 4 - combobox, 5 - radiobutton, 6 - checkbox, 7 - image (base64Binary), 8 - text (textarea), 9 - datetime (Unix time), 13 - date). ',
+        'type' => 'int',
+      ),
+      'res_type' => array(
+        'description' => 'Indication of a field type where the selected field value should be provided (1 - string, 2 - integer, 3 - float, 7 - image (base64Binary), 9 - datetime (Unix time), 13 - date).',
+        'type' => 'int',
+      ),
+      'def_value' => array(
+        'description' => 'Default field value (for such fields as combobox/radiobutton/checkbox - on the basis of sell-form-opts-values).',
+        'type' => 'int',
+      ),
+      'opt' => array(
+        'description' => 'Information on whether the field is obligatory (1 - obligatory, 8 - optional).',
+        'type' => 'int',
+      ),
+      'pos' => array(
+        'description' => 'Field position on the list of fields in the sale form. 0 means that sorting is alphabetical.',
+        'type' => 'int',
+      ),
+      'length' => array(
+        'description' => 'Acceptable size (in characters) of the field value to be provided.',
+        'type' => 'int',
+      ),
+      'min_value' => array(
+        'description' => 'Minimum field value to be provided  (it refers to such fields as: int, float, combobox, checkbox, date; 0 means there is no lower limit).',
+        'type' => 'varchar',
+        'length' => 255,
+      ),
+      'max_value' => array(
+        'description' => 'Maximum field value to be provided  (it refers to such fields as: int, float, combobox, checkbox, date; 0 means there is no upper limit).',
+        'type' => 'varchar',
+        'length' => 255,
+      ),
+      'description' => array(
+        'description' => 'Description of subsequent values that may be set for a field (it refers to such fields as combobox/radiobutton/checkbox). ',
+        'type' => 'blob',
+      ),
+      // Blob type is required.
+      'opts_values' => array(
+        'description' => 'Indication of specific values (relevant for descriptions mentioned above) which can be set for a particular field (it refers to such fields as combobox/radiobutton/checkbox; for checkbox fields, subsequent values can be summed up).',
+        'type' => 'blob',
+      ),
+      'field_desc' => array(
+        'description' => 'Detailed field description.',
+        'type' => 'blob',
+      ),
+      'param_id' => array(
+        'description' => 'Unique field identifier.',
+        'type' => 'int',
+      ),
+      // Blob type is required.
+      'param_values' => array(
+        'description' => 'Unique and fixed parameter value identifiers (it refers to such fields as combobox/radiobutton/checkbox).',
+        'type' => 'blob',
+      ),
+      'parent_id' => array(
+        'description' => 'Parent parameter identifier (his sell-form-param-id - only for dependent parameters not being on top of hierarchy. If a parameter is not a dependent one or if it can be found on top of hierarchy of dependent parameters, 0 value will be returned in the field).',
+        'type' => 'int',
+      ),
+      'parent_value' => array(
+        'description' => 'Parent parameter value for which a related parameter can be used (only for dependent parameters. If a parameter is not a dependent one no value will be returned in the field).',
+        'type' => 'blob',
+      ),
+      'unit' => array(
+        'description' => 'Parameter unit (if it has been specified).',
+        'type' => 'varchar',
+        'length' => 255,
+      ),
+      'options' => array(
+        'description' => 'Bitmask informing about parameter properties (1 - dependent, 2 - checkbox using the OR operator, with a possible selection of one, several or all the values by the seller in the sale form, 4 - checkbox using the OR operator, with a possible selection of only one value  by the seller in the sale form, 8 - range parameter). If values 2 and 4 are not set, checkbox is based on the AND operator.',
+        'type' => 'int',
+      ),
+    ),
+    'primary key' => array('country_code', 'fid'),
+    'indexes' => array(
+      'country_code' => array('country_code'),
+      'fid' => array('fid'),
+      'cat' => array('cat'),
+    ),
+  );
+
+  // Table form fields data.
+  $schema['allegro_field_data'] = array(
+    'description' => 'Allegro item fields values.',
+    'fields' => array(
+      'item_id' => array(
+        'description' => 'Allegro item id',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'fid' => array(
+        'description' => '',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'value' => array(
+        'description' => '',
+        'type' => 'blob',
+      ),
+    ),
+    'primary key' => array('item_id', 'fid'),
+    'foreign keys' => array(
+      'allegro_field_item' => array(
+        'table' => 'allegro_item',
+        'columns' => array('item_id' => 'id'),
+      ),
+      'allegro_field_data' => array(
+        'table' => 'allegro_field',
+        'columns' => array('fid' => 'fid'),
+      ),
+    ),
+    'indexes' => array(
+      'item_id' => array('item_id'),
+      'fid' => array('fid'),
+    ),
+  );
+
+  return $schema;
+}
+
+/**
+ * Implements hook_uninstall();
+ */
+function allegro_field_uninstall() {
+  variable_del('allegro_field_last_update');
+  allegro_field_delete_by_country();
+}

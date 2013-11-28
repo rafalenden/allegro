@@ -1,0 +1,6 @@
+name = Allegro Category
+description = Support for Allegro categorization.
+package = Allegro
+core = 7.x
+
+dependencies[] = allegro

@@ -1,0 +1,8 @@
+
+.hierarchical-select-wrapper .hierarchical-select option.has-children {
+  padding-right: 20px;
+}
+
+.form-type-hierarchical-select.form-item-2 .level-label {
+  /*display: none !important;*/
+}

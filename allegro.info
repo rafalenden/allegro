@@ -1,0 +1,9 @@
+name = Allegro API
+description = Integration with Allegro, a Western Europe auction portal.
+package = Allegro
+core = 7.x
+configure = admin/allegro/settings
+
+;dependencies[] = views
+
+files[] = allegro.class.inc
