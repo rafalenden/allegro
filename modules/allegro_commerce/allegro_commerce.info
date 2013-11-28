@@ -1,0 +1,7 @@
+name = Allegro Commerce
+description = Integration with Drupal Commerce.
+package = Allegro
+core = 7.x
+
+dependencies[] = allegro_item
+dependencies[] = commerce

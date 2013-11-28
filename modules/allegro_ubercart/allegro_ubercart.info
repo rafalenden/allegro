@@ -1,0 +1,7 @@
+name = Allegro Ubercart
+description = Integration with Ubercart.
+package = Allegro
+core = 7.x
+
+dependencies[] = allegro_item
+dependencies[] = ubercart
