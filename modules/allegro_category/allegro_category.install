@@ -42,14 +42,14 @@ function allegro_category_schema() {
       'parent' => array('parent'),
     ),
   );
-  
+
   return $schema;
 }
 
 /**
- * Implements of hook_uinstall().
+ * Implements of hook_uninstall().
  */
-function allegro_category_uinstall() {
+function allegro_category_uninstall() {
   variable_del('allegro_category_last_update');
   allegro_category_delete_by_country();
 }

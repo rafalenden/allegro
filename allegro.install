@@ -16,9 +16,9 @@ function allegro_requirements($phase) {
 }
 
 /**
- * Implements hook_uinstall().
+ * Implements hook_uninstall().
  */
-function allegro_uinstall() {
+function allegro_uninstall() {
   variable_del('allegro_login');
   variable_del('allegro_password');
   variable_del('allegro_webapikey');
