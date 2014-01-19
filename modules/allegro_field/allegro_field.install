@@ -1,10 +1,10 @@
 <?php
 
 /**
- * Implements hook_schema();
+ * Implements hook_schema().
  */
 function allegro_field_schema() {
-  // Table form fields information (kind of instances).
+  // Table form fields information (kind of field instances).
   $schema['allegro_field'] = array(
     'description' => 'Table for Allegro item fields.',
     'fields' => array(
@@ -151,9 +151,9 @@ function allegro_field_schema() {
 }
 
 /**
- * Implements hook_uninstall();
+ * Implements hook_uninstall().
  */
 function allegro_field_uninstall() {
   variable_del('allegro_field_last_update');
-  allegro_field_delete_by_country();
+  allegro_field_delete_all();
 }

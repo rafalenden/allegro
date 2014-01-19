@@ -1,9 +1,8 @@
 <?php
 
-/*
+/**
  * Implements hook_schema().
  */
-
 function allegro_item_schema() {
   $schema['allegro_item'] = array(
     'description' => 'The base table for Allegro items.',
@@ -58,15 +57,15 @@ function allegro_item_schema() {
         'not null' => TRUE,
         'default' => 0,
       ),
-//      'listing_cost' => array(
-//        'description' => 'Cost of listing an offer',
-//        'type' => 'float',
-//        'not null' => TRUE,
-//        'default' => 0,
-//      ),
+     // 'listing_cost' => array(
+     //   'description' => 'Cost of listing an offer',
+     //   'type' => 'float',
+     //   'not null' => TRUE,
+     //   'default' => 0,
+     // ),
     ),
     'unique keys' => array(
-      'id' => array('id')
+      'id' => array('id'),
     ),
     'primary key' => array('id'),
     'unique keys' => array(

@@ -56,12 +56,12 @@ function allegro_item_url($allegro_item) {
 
 /**
  * Creates URL of Aallegro item.
- * 
+ *
  * @param int $item_id
  *   External Allegro item ID.
  * @param int $country_code
  *   Country code of Allegro item.
- * 
+ *
  * @return string
  *   External URL (with protocol) to Allegro item.
  */
@@ -141,8 +141,7 @@ function allegro_item_menu() {
     'file' => 'allegro_item.admin.inc',
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
-
-  // Settings
+  // Settings.
   $items['admin/allegro/settings'] = array(
     'title' => 'Settings',
     'page callback' => 'drupal_get_form',
@@ -157,7 +156,7 @@ function allegro_item_menu() {
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'weight' => -10,
   );
-  // Allegro item
+  // Allegro item.
   $items['admin/allegro/item/add'] = array(
     'title' => 'Add Allegro item',
     'page callback' => 'allegro_item_add',
@@ -179,25 +178,25 @@ function allegro_item_menu() {
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'weight' => -10,
   );
-//  $items['admin/allegro/item/%allegro_item/edit'] = array(
-//    'title' => 'Edit',
-//    'page callback' => 'allegro_item_page_edit',
-//    'page arguments' => array(1),
-//    'access arguments' => array('update allegro items'),
-//    'type' => MENU_LOCAL_TASK,
-//    'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
-//    'file' => 'allegro_item.admin.inc',
-//  );
-//  $items['admin/allegro/item/%allegro_item/delete'] = array(
-//    'title' => 'Delete',
-//    'page callback' => 'drupal_get_form',
-//    'page arguments' => array('allegro_item_delete_confirm', 1),
-//    'access arguments' => array('delete allegro items'),
-//    'weight' => 1,
-//    'type' => MENU_LOCAL_TASK,
-//    'context' => MENU_CONTEXT_INLINE,
-//    'file' => 'allegro_item.admin.inc',
-//  );
+  $items['admin/allegro/item/%allegro_item/edit'] = array(
+    'title' => 'Edit',
+    'page callback' => 'allegro_item_page_edit',
+    'page arguments' => array(1),
+    'access arguments' => array('update allegro items'),
+    'type' => MENU_LOCAL_TASK,
+    'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
+    'file' => 'allegro_item.admin.inc',
+  );
+  $items['admin/allegro/item/%allegro_item/delete'] = array(
+    'title' => 'Delete',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('allegro_item_delete_confirm', 1),
+    'access arguments' => array('delete allegro items'),
+    'weight' => 1,
+    'type' => MENU_LOCAL_TASK,
+    'context' => MENU_CONTEXT_INLINE,
+    'file' => 'allegro_item.admin.inc',
+  );
 
   return $items;
 }
@@ -205,7 +204,7 @@ function allegro_item_menu() {
 /**
  * Sets the page title based on the specified Allegro item.
  *
- * @param $allegro_item
+ * @param object $allegro_item
  *   The Allegro item object.
  */
 function allegro_item_page_title($allegro_item) {
@@ -217,11 +216,11 @@ function allegro_item_page_title($allegro_item) {
  *
  * @see entity_load()
  *
- * @param $ids
+ * @param array $ids
  *   An array of Allegro item IDs.
- * @param $conditions
+ * @param array $conditions
  *   An array of conditions on the {allegro_item} table in the form 'field' => $value.
- * @param $reset
+ * @param bool $reset
  *   Whether to reset the internal entity_load cache.
  *
  * @return object
@@ -236,8 +235,6 @@ function allegro_item_load_multiple($ids = array(), $conditions = array(), $rese
  *
  * @param $id
  *   The Allegro item ID.
- * @param $vid
- *   The revision ID.
  * @param $reset
  *   Whether to reset the allegro_load_multiple cache.
  *
@@ -256,7 +253,7 @@ function allegro_item_load($id = NULL, $reset = FALSE) {
  *
  * @param $allegro_item
  *   The Allegro item to be saved.
- * 
+ *
  * @return object
  *   The saved Allegro item.
  */

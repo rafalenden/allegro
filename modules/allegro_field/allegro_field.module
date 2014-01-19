@@ -41,7 +41,7 @@ function allegro_field_menu() {
  * @param string $value
  *   Field value.
  *
- * @return
+ * @return array
  *   Field defined as array containing all necessary informations.
  */
 function allegro_field_create($fid = 0, $type = NULL, $value = NULL) {
@@ -50,21 +50,21 @@ function allegro_field_create($fid = 0, $type = NULL, $value = NULL) {
     'fvalueString' => '',
     'fvalueInt' => 0,
     'fvalueFloat' => 0,
-    'fvalueImage' => ' ', // When empty this field should contain space.
+    'fvalueImage' => ' ', // When empty, this field should contain space.
     'fvalueDatetime' => 0,
     'fvalueDate' => '',
     'fvalueRangeInt' => array(
       'fvalueRangeIntMin' => 0,
-      'fvalueRangeIntMax' => 0
+      'fvalueRangeIntMax' => 0,
     ),
     'fvalueRangeFloat' => array(
       'fvalueRangeFloatMin' => 0,
-      'fvalueRangeFloatMax' => 0
+      'fvalueRangeFloatMax' => 0,
     ),
     'fvalueRangeDate' => array(
       'fvalueRangeDateMin' => '',
-      'fvalueRangeDateMax' => ''
-    )
+      'fvalueRangeDateMax' => '',
+    ),
   );
   // Check if this type of field really exists.
   if ($value && $type && isset($field['fvalue' . ucfirst($type)])) {
@@ -79,7 +79,7 @@ function allegro_field_create($fid = 0, $type = NULL, $value = NULL) {
  * @param array $fields
  *   Fields containing fid => value keypairs.
  *
- * @return
+ * @return array
  *   Fields array containing all necessary informations (NOT JET(indexed by fid)).
  */
 function allegro_field_create_multiple(Array $fields = array()) {
@@ -89,7 +89,7 @@ function allegro_field_create_multiple(Array $fields = array()) {
     if (!empty($value) || $value === '0') {
       $type = allegro_field_get_type($sellformfields[$fid]->res_type);
       $allegro_fields[] = allegro_field_create($fid, $type, $value);
-      //TODO: $allegro_fields[$fid] = allegro_field_create($fid, $type, $value);
+      // TODO: $allegro_fields[$fid] = allegro_field_create($fid, $type, $value);
     }
   }
   return $allegro_fields;
@@ -98,7 +98,7 @@ function allegro_field_create_multiple(Array $fields = array()) {
 /**
  * Function return information which fields are supported.
  *
- * @return
+ * @return array
  *   Return available fields as array.
  *
  * @todo Create UI for selecting this fields.
@@ -370,11 +370,10 @@ function allegro_field_get_type($type) {
  * @param array $options
  *   Options values as integers.
  *
- * @return
+ * @return int
  *   Calculated field value.
  *
  * @see http://allegro.pl/webapi/documentation.php/show/id,1110#method-output
- *
  */
 function allegro_field_calculate_options($options = array()) {
   $options = (array) $options;
@@ -411,13 +410,13 @@ function allegro_field_convert($allego_field) {
   $field['#sellformfield'] = $allego_field;
   $field['#description'] = stripslashes($allego_field->field_desc);
   $field['#size'] = $allego_field->length;
-//  $field['#name'] = $allego_field->fid;
+  // $field['#name'] = $allego_field->fid;
 
   if ($allego_field->opt == ALLEGRO_FIELD_REQUIRED) {
     $field['#required'] = TRUE;
   }
 
-  // Shipping costs
+  // Shipping costs.
   if ($allego_field->def_value == -1) {
     unset($field['#default_value']);
     unset($field['#description']);
@@ -461,15 +460,15 @@ function allegro_field_convert($allego_field) {
       break;
     case ALLEGRO_FIELD_IMAGE:
       $field['#type'] = 'managed_file';
-//      $field['#upload_validators'] = array(
-//        'file_validate_extensions' => array('gif png jpg jpeg'),
-//        'file_validate_size' => array(0.3 * 1024 * 1024),
-//        'file_validate_image_resolution' => array(100 * 100)
-//      );
+      // $field['#upload_validators'] = array(
+      //  'file_validate_extensions' => array('gif png jpg jpeg'),
+      //  'file_validate_size' => array(0.3 * 1024 * 1024),
+      //  'file_validate_image_resolution' => array(100 * 100)
+      // );
       break;
     case ALLEGRO_FIELD_TEXT:
       $field['#type'] = 'textarea';
-      //$field['format']['format']['#access'] = FALSE;
+      // $field['format']['format']['#access'] = FALSE;
       break;
     case ALLEGRO_FIELD_DATETIME:
       $field['#type'] = 'date';
@@ -489,7 +488,7 @@ function allegro_field_convert($allego_field) {
  * @param bool $show_titles
  *   Show fields titles.
  * @param bool $generate_keys
- *  Automatically generate keys for form API elements.
+ *   Automatically generate keys for form API elements.
  *
  * @return array
  *   Array of form API elements.
@@ -549,7 +548,7 @@ function allegro_field_convert_range($sellformfields = array(), $fid_from = 0, $
  *   Field ID, also indicating group of shipping fields.
  *   For FID=3 function will convert fields with FID=(3, 30, 300).
  * @param array $sellformfields
- *    An array containing Allegro field objects loaded from database.
+ *   An array containing Allegro field objects loaded from database.
  *
  * @return array
  *   An array of form API elements ready to insert as row in form table.
@@ -581,7 +580,7 @@ function allegro_field_convert_shipping_fields_row($fid, $sellformfields) {
  * @param int $fids
  *   Field IDs to convert and put in table.
  * @param array $sellformfields
- *    An array containing Allegro field objects loaded from database.
+ *   An array containing Allegro field objects loaded from database.
  *
  * @return array
  *   An array of form API elements ready to insert as row in form table.
@@ -599,11 +598,24 @@ function allegro_field_convert_shipping_fields_table($fids, $sellformfields) {
  *
  * @param int $country_code
  *   Country code of fields to be deleted.
+ *
+ * @return int
+ *   Number of deleted fields.
  */
-function allegro_field_delete_by_country($country_code = NULL) {
+function allegro_field_delete_by_country($country_code) {
   db_delete('allegro_field')
    ->condition('country_code', $country_code)
    ->execute();
+}
+
+/**
+ * Delete all fields.
+ *
+ * @return int
+ *   Number of deleted fields.
+ */
+function allegro_field_delete_all() {
+  db_delete('allegro_field')->execute();
 }
 
 /**
@@ -614,7 +626,7 @@ function allegro_field_delete_by_country($country_code = NULL) {
  * @param $package
  *   Parameter which allows for defining a size of data bits (min. 1, default: 50).
  *
- * @return
+ * @return int
  *   Number of downloaded and inserted fields.
  */
 function allegro_field_download($offset, $package) {

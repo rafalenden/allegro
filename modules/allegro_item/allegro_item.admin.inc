@@ -44,7 +44,7 @@ function allegro_item_add() {
 /**
  * Menu callback; presents the Allegro item editing form, or redirects to delete confirmation.
  *
- * @param $allegro_item
+ * @param object $allegro_item
  *   The Allegro item object to edit.
  */
 function allegro_item_page_edit($allegro_item) {
@@ -54,11 +54,11 @@ function allegro_item_page_edit($allegro_item) {
 }
 
 /**
- * Form builder; Displays the Allegro item add/edit form.
+ * Form builder. Displays the Allegro item add/edit form.
  *
- * @param $form
- * @param $form_state
- * @param $allegro_item
+ * @param array $form
+ * @param array $form_state
+ * @param object $allegro_item
  *   The Allegro item object to edit, which may be brand new.
  */
 function allegro_item_form($form, &$form_state, $allegro_item) {
@@ -96,19 +96,19 @@ function allegro_item_form($form, &$form_state, $allegro_item) {
     '#type' => 'textfield',
     '#description' => NULL,
     '#default_value' => $allegro_item->title,
-   ) + allegro_field_convert($sellformfields[1]);
+  ) + allegro_field_convert($sellformfields[1]);
 
   $form['sellformfields'] = array(
     '#type' => 'value',
     '#value' => $sellformfields,
   );
 
-  // Category
+  // Category.
   $form['item'][2] = array(
     '#type' => 'hierarchical_select',
     '#size' => 8,
     '#config' => _allegro_category_hierarchical_select_config(),
-   ) + allegro_field_convert($sellformfields[2]);
+  ) + allegro_field_convert($sellformfields[2]);
   unset($form['item'][2]['#maxlength']);
 
   // Helper element for Hierarchical Select ajax handling.
@@ -131,7 +131,7 @@ function allegro_item_form($form, &$form_state, $allegro_item) {
     '#attributes' => array('style' => 'display: none'),
   );
 
-  // Load fields for choosen category.
+  // Load fields for chosen category.
   if (!empty($form_state['value'][2]['hierarchical_select']['selects'])) {
     $category_lineage = $form_state['value'][2]['hierarchical_select']['selects'];
     $count = count($category_lineage);
@@ -142,7 +142,7 @@ function allegro_item_form($form, &$form_state, $allegro_item) {
       foreach ($category_sellformfields as $sellformfield) {
         $form['item']['extra_fields'][$sellformfield->fid] = array(
           '#description' => NULL,
-         ) + allegro_field_convert($sellformfield);
+        ) + allegro_field_convert($sellformfield);
       }
       if (!empty($form['item']['extra_fields'][$sellformfield->fid])) {
         $form['item']['extra_fields']['#attributes'] = array('style' => '');
@@ -150,22 +150,22 @@ function allegro_item_form($form, &$form_state, $allegro_item) {
     }
   }
 
-//  // Gallery
-//  $form['gallery'] = array(
-//    '#title' => t('Gallery'),
-//    '#type' => 'fieldset',
-//    '#collapsible' => TRUE,
-//    '#collapsed' => TRUE,
-//  );
-//  // Images
-//  for ($fid = 16; $fid <= 23; $fid++) {
-//    $form['gallery']['image_' . $fid] = allegro_field_convert($sellformfields[$fid]);
-//    if ($fid == 16) {
-//      $gallery_desc = $form['gallery']['image_' . $fid]['#description'];
-//    }
-//    unset($form['gallery']['image_' . $fid]['#description']);
-//  }
-//  $form['gallery']['#description'] = $gallery_desc;
+  // // Gallery
+  // $form['gallery'] = array(
+  //   '#title' => t('Gallery'),
+  //   '#type' => 'fieldset',
+  //   '#collapsible' => TRUE,
+  //   '#collapsed' => TRUE,
+  // );
+  // // Images
+  // for ($fid = 16; $fid <= 23; $fid++) {
+  //   $form['gallery']['image_' . $fid] = allegro_field_convert($sellformfields[$fid]);
+  //   if ($fid == 16) {
+  //     $gallery_desc = $form['gallery']['image_' . $fid]['#description'];
+  //   }
+  //   unset($form['gallery']['image_' . $fid]['#description']);
+  // }
+  // $form['gallery']['#description'] = $gallery_desc;
 
   $form['offer'] = array(
     '#title' => t('Offer details'),
@@ -174,28 +174,28 @@ function allegro_item_form($form, &$form_state, $allegro_item) {
     '#collapsed' => FALSE,
   );
 
-  // Quantity
+  // Quantity.
   $form['offer'][5] = array(
     '#description' => '',
-   ) + allegro_field_convert($sellformfields[5]);
+  ) + allegro_field_convert($sellformfields[5]);
 
-  // Buy now price
+  // Buy now price.
   $form['offer'][8] = array(
     '#field_suffix' => t('zł'),
     '#description' => '',
     '#required' => TRUE,
-   ) + allegro_field_convert($sellformfields[8]);
+  ) + allegro_field_convert($sellformfields[8]);
 
-  // Duration
+  // Duration.
   $form['offer'][4] = array(
     '#field_suffix' => t('days'),
-   ) + allegro_field_convert($sellformfields[4]);
+  ) + allegro_field_convert($sellformfields[4]);
   unset($form['offer'][4]['#options'][5]);
 
-  // Additional options (Promotion options)
+  // Additional options (Promotion options).
   $form['offer'][15] = array(
     '#description' => NULL,
-   ) + allegro_field_convert($sellformfields[15]);
+  ) + allegro_field_convert($sellformfields[15]);
   unset($form['offer'][15]['#options'][64]);
 
   $form['payment_shipment'] = array(
@@ -247,11 +247,11 @@ function allegro_item_form($form, &$form_state, $allegro_item) {
     '#options' => allegro_field_convert_shipping_fields_table($cod, $sellformfields),
   );
 
-  // Free shipping methods
+  // Free shipping methods.
   $form['payment_shipment'][35] = allegro_field_convert($sellformfields[35]);
   $form['payment_shipment'][35]['#options'][1] .= ' (' . t('cash on delivery') . ')';
 
-  // Shipping delay
+  // Shipping delay.
   if (isset($sellformfields[340])) {
     $form['payment_shipment'][340] = allegro_field_convert($sellformfields[340]);
     $form['payment_shipment'][340]['#options'][1] = 'natychmiast';
@@ -264,40 +264,45 @@ function allegro_item_form($form, &$form_state, $allegro_item) {
     }
   }
 
-  // Who pay for shipping
+  // Who pay for shipping.
   $form['payment_shipment'][12] = allegro_field_convert($sellformfields[12]);
 
-  // Shipping options
+  // Shipping options.
   $form['payment_shipment'][13] = array(
     '#description' => NULL,
-   ) + allegro_field_convert($sellformfields[13]);
+  ) + allegro_field_convert($sellformfields[13]);
   unset($form['payment_shipment'][13]['#options'][16]);
-  // Payment types
+
+  // Payment types.
   $form['payment_shipment'][14] = array(
     '#title' => t('Payment details'),
     '#description' => NULL,
-   ) + allegro_field_convert($sellformfields[14]);
-  unset($form['payment_shipment'][14]['#options'][16]); // Szczegóły w opisie
-  // First bank account
+  ) + allegro_field_convert($sellformfields[14]);
+  // Szczegóły w opisie
+  unset($form['payment_shipment'][14]['#options'][16]);
+
+  // First bank account.
   $form['payment_shipment'][33] = array(
     '#states' => array(
-      'visible' => array(':input[id="edit-14-1"]' => array('checked' => TRUE),),
+      'visible' => array(':input[id="edit-14-1"]' => array('checked' => TRUE)),
     ),
-   ) + allegro_field_convert($sellformfields[33]);
-  // First bank account
-  $form['payment_shipment'][34] = array(
-    '#states' => array(
-      'visible' => array(':input[id="edit-14-1"]' => array('checked' => TRUE),),
-    ),
-   ) + allegro_field_convert($sellformfields[34]);
-  // Second bank account
-  $form['payment_shipment'][34] = array(
-    '#states' => array(
-      'visible' => array(':input[id="edit-14-1"]' => array('checked' => TRUE),),
-    ),
-   ) + allegro_field_convert($sellformfields[34]);
+  ) + allegro_field_convert($sellformfields[33]);
 
-  // Additional information on shipment and payment
+  // First bank account.
+  $form['payment_shipment'][34] = array(
+    '#states' => array(
+      'visible' => array(':input[id="edit-14-1"]' => array('checked' => TRUE)),
+    ),
+  ) + allegro_field_convert($sellformfields[34]);
+
+  // Second bank account.
+  $form['payment_shipment'][34] = array(
+    '#states' => array(
+      'visible' => array(':input[id="edit-14-1"]' => array('checked' => TRUE)),
+    ),
+  ) + allegro_field_convert($sellformfields[34]);
+
+  // Additional information on shipment and payment.
   $form['payment_shipment'][27] = array(
     '#states' => array(
       'visible' => array(
@@ -305,8 +310,9 @@ function allegro_item_form($form, &$form_state, $allegro_item) {
         ':input[id="edit-14-16"]' => array('checked' => TRUE),
       ),
     ),
-   ) + allegro_field_convert($sellformfields[27]);
+  ) + allegro_field_convert($sellformfields[27]);
 
+  // Location.
   $form['payment_shipment']['location'] = array(
     '#title' => t('Location'),
     '#type' => 'fieldset',
@@ -314,25 +320,26 @@ function allegro_item_form($form, &$form_state, $allegro_item) {
     '#collapsed' => FALSE,
   );
 
-  // Region
+  // Region.
   $form['payment_shipment']['location'][10] = array(
     '#required' => TRUE,
-   ) + allegro_field_convert($sellformfields[10]);
+  ) + allegro_field_convert($sellformfields[10]);
 
-  // City
+  // City.
   $form['payment_shipment']['location'][11] = allegro_field_convert($sellformfields[11]);
 
-  // Postcode
+  // Postcode.
   $form['payment_shipment']['location'][32] = allegro_field_convert($sellformfields[32]);
 
-  // Description (body)
+  // Description (body).
   $form[24] = array(
     '#type' => 'text_format',
     '#format' => 'full_html',
-   ) + allegro_field_convert($sellformfields[24]);
+  ) + allegro_field_convert($sellformfields[24]);
 
-//  $form['#after_build'][] = 'allegro_item_form_after_build';
-// Add the buttons.
+  // $form['#after_build'][] = 'allegro_item_form_after_build';
+
+  // Add the buttons.
   $form['buttons'] = array();
   $form['buttons']['#weight'] = 100;
   $form['buttons']['submit'] = array(
@@ -360,11 +367,6 @@ function allegro_item_form($form, &$form_state, $allegro_item) {
 
 /**
  * AJAX callback returning fields for selected category.
- *
- * @param array $form
- * @param array $form_state
- *
- * @return array
  */
 function allegro_item_category_fields_callback($form, &$form_state) {
   return $form['item']['extra_fields'];
@@ -373,10 +375,7 @@ function allegro_item_category_fields_callback($form, &$form_state) {
 /**
  * Validation callback for allegro_item_form().
  *
- * @param array $form
- * @param array $form_state
- *
- * @return boolean
+ * @return bool
  *   TRUE if form has no errors, FALSE otherwise.
  */
 function allegro_item_form_validate($form, &$form_state) {
@@ -408,7 +407,7 @@ function allegro_item_form_validate($form, &$form_state) {
   if (empty($category)) {
     form_set_error(2, t('@field field is required.', array('@field' => $form['item'][2]['#title'])));
   }
-  else if (allegro_category_load_children($category)->rowCount() > 0) {
+  elseif (allegro_category_load_children($category)->rowCount() > 0) {
     form_set_error(2, t('Selected category is not the lowest-level category.'));
   }
 
@@ -425,10 +424,10 @@ function allegro_item_form_validate($form, &$form_state) {
       if ($sellformfield->type == 6) {
         $fields[$sellformfield->fid] = allegro_field_calculate_options($value);
       }
-      else if (is_array($value) && isset($value['value'])) {
+      elseif (is_array($value) && isset($value['value'])) {
         $fields[$sellformfield->fid] = $value['value'];
       }
-      else if (is_string($value)) {
+      elseif (is_string($value)) {
         $fields[$sellformfield->fid] = $value;
       }
     }
@@ -461,7 +460,7 @@ function allegro_item_form_validate($form, &$form_state) {
  * @param array $form
  * @param array $form_state
  *
- * @return boolean
+ * @return bool
  *   TRUE if no errors occurred, FALSE otherwise.
  */
 function allegro_item_form_submit($form, &$form_state) {

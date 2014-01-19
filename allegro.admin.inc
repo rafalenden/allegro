@@ -23,8 +23,8 @@ function allegro_settings_form() {
     '#description' => t('Your Allegro account password.'),
     '#default_value' => variable_get('allegro_password'),
   );
-  if (variable_get('allegro_password', '')) {
-    $form['allegro_password']['#description'] = t('Your Allegro account password. Leave blank if you don\'t wish to change it.');
+  if (variable_get('allegro_password')) {
+    $form['allegro_password']['#description'] = t("Your Allegro account password. Leave blank if you don't wish to change it.");
   }
   $form['allegro_webapikey'] = array(
     '#type' => 'textfield',
@@ -41,7 +41,7 @@ function allegro_settings_form() {
     '#default_value' => variable_get('allegro_country_code', 1),
     '#required' => TRUE,
   );
-  
+
   $form['#submit'][] = 'allegro_settings_form_submit';
 
   return system_settings_form($form);
@@ -54,10 +54,10 @@ function allegro_settings_form_submit($form, &$form_state) {
   $values = &$form_state['values'];
 
   if (empty($values['allegro_password'])) {
-    $values['allegro_password'] = variable_get('allegro_password', '');
+    $values['allegro_password'] = variable_get('allegro_password');
   }
 
-  // Test SOAP connection
+  // Test SOAP connection.
   $test_passed = allegro_test_connection($values['allegro_login'], $values['allegro_password'], $values['allegro_webapikey'], $values['allegro_country_code']);
   if ($test_passed) {
     drupal_set_message(t('Connected successfully to SOAP service.'));

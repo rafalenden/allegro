@@ -111,17 +111,17 @@ class AllegroItemController extends DrupalDefaultEntityController {
   /**
    * Create a default Allegro item.
    *
-   * @param $type
+   * @param string $type
    *   The machine-readable type of the Allegro item.
    *
-   * @return
+   * @return object
    *   An Allegro item object with all default fields initialized.
    */
   public function create($type = 'allegro_item') {
     return (object) array(
-       'id' => '',
-       'type' => $type,
-       'title' => '',
+      'id' => '',
+      'type' => $type,
+      'title' => '',
     );
   }
 
