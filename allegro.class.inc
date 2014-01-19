@@ -184,12 +184,12 @@ class Allegro extends SoapClient {
     $params = array(
       'sessionHandle' => $this->sid,
       'fields' => $fields,
-//      'itemTemplateId' => 0,
+      // 'itemTemplateId' => 0,
       'localId' => $localId,
-//      'itemTemplateCreate' => array(
-//        'itemTemplateOption' => 1,
-//        'itemTemplateName' => 'Test',
-//      )
+      // 'itemTemplateCreate' => array(
+        // 'itemTemplateOption' => 1,
+        // 'itemTemplateName' => 'Test',
+      // ),
     );
 
     return $this->doNewAuctionExt($params);

@@ -150,7 +150,7 @@ function allegro_item_form($form, &$form_state, $allegro_item) {
     }
   }
 
-  // // Gallery
+  // // Gallery.
   // $form['gallery'] = array(
   //   '#title' => t('Gallery'),
   //   '#type' => 'fieldset',
