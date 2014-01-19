@@ -1,6 +1,6 @@
 <?php
 
-// Define Allegro field types.
+// Allegro field types.
 define('ALLEGRO_FIELD_STRING', 1);
 define('ALLEGRO_FIELD_INTEGER', 2);
 define('ALLEGRO_FIELD_FLOAT', 3);
@@ -11,6 +11,10 @@ define('ALLEGRO_FIELD_IMAGE', 7);
 define('ALLEGRO_FIELD_TEXT', 8);
 define('ALLEGRO_FIELD_DATETIME', 9);
 define('ALLEGRO_FIELD_DATE', 13);
+
+// Allegro field obligatory.
+define('ALLEGRO_FIELD_REQUIRED', 1);
+define('ALLEGRO_FIELD_OPTIONAL', 8);
 
 /**
  * Implements hook_menu().
@@ -29,14 +33,14 @@ function allegro_field_menu() {
 
 /**
  * Creates Allegro field ready to send via SOAP service.
- * 
+ *
  * @param int $fid
  *   Field ID.
  * @param string $type
  *   Type of created field.
  * @param string $value
  *   Field value.
- * 
+ *
  * @return
  *   Field defined as array containing all necessary informations.
  */
@@ -71,10 +75,10 @@ function allegro_field_create($fid = 0, $type = NULL, $value = NULL) {
 
 /**
  * Creates Allegro fields multple at once ready to send via SOAP service.
- * 
+ *
  * @param array $fields
  *   Fields containing fid => value keypairs.
- * 
+ *
  * @return
  *   Fields array containing all necessary informations (NOT JET(indexed by fid)).
  */
@@ -93,10 +97,10 @@ function allegro_field_create_multiple(Array $fields = array()) {
 
 /**
  * Function return information which fields are supported.
- * 
+ *
  * @return
  *   Return available fields as array.
- * 
+ *
  * @todo Create UI for selecting this fields.
  */
 function allegro_get_fields() {
@@ -323,10 +327,10 @@ function allegro_field_create_options($keys, $values) {
 
 /**
  * Function already unused.
- * 
+ *
  * @param string $human_readable
  *   Human readeable string.
- * 
+ *
  * @return
  *   Machine readable string.
  */
@@ -336,10 +340,10 @@ function allegro_field_machine_name($human_readable) {
 
 /**
  * Get field name from integer defining its type.
- * 
+ *
  * @param int $type
  *   Field type number.
- * 
+ *
  * @return
  *   Field type name.
  */
@@ -362,15 +366,15 @@ function allegro_field_get_type($type) {
 
 /**
  * Calculate bitmask from field options values.
- * 
+ *
  * @param array $options
- *   Options values as integers. 
- * 
+ *   Options values as integers.
+ *
  * @return
  *   Calculated field value.
- * 
+ *
  * @see http://allegro.pl/webapi/documentation.php/show/id,1110#method-output
- * 
+ *
  */
 function allegro_field_calculate_options($options = array()) {
   $options = (array) $options;
@@ -383,10 +387,10 @@ function allegro_field_calculate_options($options = array()) {
 
 /**
  * Converts Allegro field to Drupal Form API element.
- * 
+ *
  * @param object $allego_field
  *   Allegro field object loaded from database.
- * 
+ *
  * @return array
  *   Form API element.
  */
@@ -394,7 +398,7 @@ function allegro_field_convert($allego_field) {
   // http://allegro.pl/webapi/documentation.php/show/id,91
   // JEŚLI LISTA JEST SELECTEM POWINIENEM DODAĆ #validate PONIEWAŻ WOJEWÓDZTWO
   // NIE JEST SPRAWDZANE POD KONTEM OBLIGATORYJNOŚCI
-  // Określenie typu pola w formularzu sprzedaży (1 - string, 2 - integer, 3 - float, 4 - combobox, 5 - radiobutton, 6 - checkbox, 7 - image (base64Binary), 8 - text (textarea), 9 - datetime (Unix time), 13 - date). 
+  // Określenie typu pola w formularzu sprzedaży (1 - string, 2 - integer, 3 - float, 4 - combobox, 5 - radiobutton, 6 - checkbox, 7 - image (base64Binary), 8 - text (textarea), 9 - datetime (Unix time), 13 - date).
 
   $field = array();
 
@@ -409,7 +413,7 @@ function allegro_field_convert($allego_field) {
   $field['#size'] = $allego_field->length;
 //  $field['#name'] = $allego_field->fid;
 
-  if ($allego_field->opt == Allegro::FIELD_REQUIRED) {
+  if ($allego_field->opt == ALLEGRO_FIELD_REQUIRED) {
     $field['#required'] = TRUE;
   }
 
@@ -479,14 +483,14 @@ function allegro_field_convert($allego_field) {
 
 /**
  * Converts Allegro fields to form API elements.
- * 
+ *
  * @param array $sellformfields
  *   Array containing Allegro field objects loaded from database.
  * @param bool $show_titles
  *   Show fields titles.
  * @param bool $generate_keys
  *  Automatically generate keys for form API elements.
- * 
+ *
  * @return array
  *   Array of form API elements.
  */
@@ -511,7 +515,7 @@ function allegro_field_convert_multiple($sellformfields = array(), $show_titles 
 
 /**
  * Converts Allegro fields to form API elements in given field ID range.
- * 
+ *
  * @param array $sellformfields
  *   An array containing Allegro field objects loaded from database.
  * @param int $fid_from
@@ -520,7 +524,7 @@ function allegro_field_convert_multiple($sellformfields = array(), $show_titles 
  *   Field ID to end on.
  * @param bool $show_titles
  *   Show fields titles.
- * 
+ *
  * @return array
  *   An array of form API elements.
  */
@@ -540,13 +544,13 @@ function allegro_field_convert_range($sellformfields = array(), $fid_from = 0, $
 
 /**
  * Convert to form API elements of shipping service fields and create a table row containing this fields.
- * 
+ *
  * @param int $fid
  *   Field ID, also indicating group of shipping fields.
  *   For FID=3 function will convert fields with FID=(3, 30, 300).
  * @param array $sellformfields
  *    An array containing Allegro field objects loaded from database.
- * 
+ *
  * @return array
  *   An array of form API elements ready to insert as row in form table.
  */
@@ -573,12 +577,12 @@ function allegro_field_convert_shipping_fields_row($fid, $sellformfields) {
 
 /**
  * Convert to form API elements of shipping service fields and create a table containing this fields.
- * 
+ *
  * @param int $fids
  *   Field IDs to convert and put in table.
  * @param array $sellformfields
  *    An array containing Allegro field objects loaded from database.
- * 
+ *
  * @return array
  *   An array of form API elements ready to insert as row in form table.
  */
@@ -592,7 +596,7 @@ function allegro_field_convert_shipping_fields_table($fids, $sellformfields) {
 
 /**
  * Delete all fields for given country.
- * 
+ *
  * @param int $country_code
  *   Country code of fields to be deleted.
  */

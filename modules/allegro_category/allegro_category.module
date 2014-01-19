@@ -55,7 +55,7 @@ function allegro_category_load_multiple($cids) {
  *
  * @return
  *   Parent category ID.
- * 
+ *
  * @todo Load parent object, not only id.
  */
 function allegro_category_load_parent_id($cid) {
@@ -127,7 +127,7 @@ function allegro_category_download($offset, $package) {
     $allegro = allegro_client();
     $response = $allegro->getCatsDataLimit($offset, $package);
     $counter = 0;
-    foreach ($response->catsList->item as $i => $category) {
+    foreach ($response->catsList->item as $category) {
       db_insert('allegro_category')
        ->fields(array(
          'country_code' => $allegro->countryCode,
@@ -151,7 +151,7 @@ function allegro_category_download($offset, $package) {
 
 /**
  * Delete all categories for given country.
- * 
+ *
  * @param int $country_code
  *   Country code of categories to be deleted.
  */

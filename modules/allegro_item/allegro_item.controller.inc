@@ -7,11 +7,11 @@ class AllegroItemController extends DrupalDefaultEntityController {
 
   /**
    * Save Allegro item.
-   * 
+   *
    * @global object $user
-   * 
+   *
    * @param object $allegro_item
-   * 
+   *
    * @return mixed
    *   Allegro item object on success, FALSE otherwise.
    */
@@ -71,7 +71,7 @@ class AllegroItemController extends DrupalDefaultEntityController {
    *
    * @param array $ids
    *   An array of Allegro item IDs to delete.
-   * 
+   *
    * @return bool
    *   TRUE on success, FALSE otherwise.
    */
@@ -84,7 +84,7 @@ class AllegroItemController extends DrupalDefaultEntityController {
          ->condition('id', $ids, 'IN')
          ->execute();
 
-        foreach ($allegro_items as $allegro_item_id => $allegro_item) {
+        foreach ($allegro_items as $allegro_item) {
           field_attach_delete('allegro_item', $allegro_item);
         }
 

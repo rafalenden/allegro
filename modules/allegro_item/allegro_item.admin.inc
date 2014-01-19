@@ -7,7 +7,7 @@
 
 /**
  * Menu callback; Displays a listing of Allegri items.
- * 
+ *
  * @return string
  *   Items as HTML unordered list.
  */
@@ -132,8 +132,8 @@ function allegro_item_form($form, &$form_state, $allegro_item) {
   );
 
   // Load fields for choosen category.
-  if (!empty($form_state['input'][2]['hierarchical_select']['selects'])) {
-    $category_lineage = $form_state['input'][2]['hierarchical_select']['selects'];
+  if (!empty($form_state['value'][2]['hierarchical_select']['selects'])) {
+    $category_lineage = $form_state['value'][2]['hierarchical_select']['selects'];
     $count = count($category_lineage);
     $cid = $category_lineage[$count - 1];
     // Selected category is the lowest-level category.
@@ -360,10 +360,10 @@ function allegro_item_form($form, &$form_state, $allegro_item) {
 
 /**
  * AJAX callback returning fields for selected category.
- * 
+ *
  * @param array $form
  * @param array $form_state
- * 
+ *
  * @return array
  */
 function allegro_item_category_fields_callback($form, &$form_state) {
@@ -372,10 +372,10 @@ function allegro_item_category_fields_callback($form, &$form_state) {
 
 /**
  * Validation callback for allegro_item_form().
- * 
+ *
  * @param array $form
  * @param array $form_state
- * 
+ *
  * @return boolean
  *   TRUE if form has no errors, FALSE otherwise.
  */
@@ -396,7 +396,7 @@ function allegro_item_form_validate($form, &$form_state) {
       continue;
     }
     $field = $extra_field['#sellformfield'];
-    if ($field->opt == Allegro::FIELD_REQUIRED && isset($values[$field->fid]) && in_array($field->type, array(4, 5, 6))) {
+    if ($field->opt == ALLEGRO_FIELD_REQUIRED && isset($values[$field->fid]) && in_array($field->type, array(4, 5, 6))) {
       $values[$field->fid] = $extra_values[$field->fid] = (array) $values[$field->fid];
       if (!in_array(TRUE, $values[$field->fid])) {
         form_set_error($field->fid, t('@field field is required.', array('@field' => $field->title)));
@@ -455,12 +455,12 @@ function allegro_item_form_validate($form, &$form_state) {
 
 /**
  * Form submit callback for allegro_item_form().
- * 
+ *
  * @global object $user
- * 
+ *
  * @param array $form
  * @param array $form_state
- * 
+ *
  * @return boolean
  *   TRUE if no errors occurred, FALSE otherwise.
  */
@@ -475,7 +475,7 @@ function allegro_item_form_submit($form, &$form_state) {
     $item = $allegro->newAuction($form_state['created_fields'], $local_id);
     $verified_item = $allegro->verifyItem($local_id);
     if ($item->itemId == $verified_item->itemId) {
-      $item_link = l(check_plain($values[1]), allegro_item_url_external($verified_item->itemId, $allegro->countryCode));
+      $item_link = l($values[1], allegro_item_url_external($verified_item->itemId, $allegro->countryCode));
       drupal_set_message(t('Auction !auction-link (%item_id) created successfully.', array('!auction-link' => $item_link, '%item_id' => $verified_item->itemId)));
       drupal_set_message(t('Detailed description of costs for listing an offer: <pre>@costs</pre>', array('@costs' => $form_state['checked_item']->itemPriceDesc)));
     }
@@ -514,7 +514,7 @@ function allegro_item_form_submit($form, &$form_state) {
 
 /**
  * Form submit callback for delete confirmation.
- * 
+ *
  * @param array $form
  * @param array $form_state
  */
@@ -532,12 +532,12 @@ function allegro_item_form_delete_submit($form, &$form_state) {
 
 /**
  * Menu callback to display an Allegro item entity.
- * 
+ *
  * @global object $language
- * 
+ *
  * @param object $allegro_item
  * @param string $view_mode
- * 
+ *
  * @return string
  */
 function allegro_item_view($allegro_item, $view_mode = 'default') {

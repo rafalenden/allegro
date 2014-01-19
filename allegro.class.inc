@@ -12,9 +12,6 @@ class Allegro extends SoapClient {
   public $webapiKey;
   public $logged = FALSE;
 
-  const FIELD_REQUIRED = 1;
-  const FIELD_OPTIONAL = 8;
-
   public function __construct() {
     $options = array(
       'cache_wsdl' => WSDL_CACHE_NONE,
