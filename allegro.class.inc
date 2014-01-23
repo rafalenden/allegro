@@ -30,7 +30,7 @@ class Allegro extends SoapClient {
 
       $password_encrypted = TRUE;
       if (function_exists('hash') && in_array('sha256', hash_algos())) {
-        $this->userPassword = hash('sha256', $this->userPassword, true);
+        $this->userPassword = hash('sha256', $this->userPassword, TRUE);
       }
       elseif (function_exists('mhash') && is_int(MHASH_SHA256)) {
         $this->userPassword = mhash(MHASH_SHA256, $this->userPassword);
@@ -58,7 +58,7 @@ class Allegro extends SoapClient {
 
       $this->sid = $this->session->sessionHandlePart;
       $this->userId = $this->session->userId;
-      $this->logged = true;
+      $this->logged = TRUE;
 
       return $this;
     }

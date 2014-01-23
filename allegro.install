@@ -1,17 +1,28 @@
 <?php
 
 /**
+ * @file
+ * Install hooks for the Allegro API module.
+ */
+
+/**
  * Implements hook_requirements().
  */
 function allegro_requirements($phase) {
+  // Ensure translations don't break at install time.
   $t = get_t();
+
   $requirements = array();
   if (!class_exists('SoapClient')) {
     $requirements['allegro_soap'] += array(
+      'title' => $t('PHP SoapClient class'),
       'severity' => REQUIREMENT_ERROR,
-      'description' => $t('Allegro requires the PHP <a href="@soap-url">SOAP extension</a>.', array('@soap-url' => 'http://php.net/manual/en/book.soap.php')),
+      'description' => $t(
+        'Allegro requires the PHP <a href="@soap-url">SOAP extension</a>.',
+        array('@soap-url' => 'http://php.net/manual/en/book.soap.php')),
     );
   }
+
   return $requirements;
 }
 

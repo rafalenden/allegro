@@ -669,7 +669,7 @@ function allegro_field_download($offset, $package) {
   }
   catch (SoapFault $e) {
     $transaction->rollback();
-    allegro_watchdog_exception('allegro_field', $e);
+    watchdog_exception('allegro_field', $e);
     drupal_set_message($e->faultstring, 'error');
   }
   return $counter;

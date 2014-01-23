@@ -1,17 +1,6 @@
 <?php
 
 /**
- * Implements hook_permission().
- */
-function allegro_permission() {
-  return array(
-    'administer allegro' => array(
-      'title' => t('Administer Allegro'),
-    ),
-  );
-}
-
-/**
  * Implements hook_menu().
  */
 function allegro_menu() {
@@ -30,8 +19,30 @@ function allegro_menu() {
   return $items;
 }
 
-function allegro_client($login = TRUE, $encode = TRUE, $cache = TRUE) {
-  if ($cache) {
+/**
+ * Implements hook_permission().
+ */
+function allegro_permission() {
+  return array(
+    'administer allegro' => array(
+      'title' => t('Administer Allegro'),
+    ),
+  );
+}
+
+/**
+ * Connect to Allegro WebAPI and returns SoapClient object.
+ *
+ * @param  bool $login
+ *   Log into the Soap service.
+ * @param  bool $cache
+ *   Whether to reset the internal allegro_client cache.
+ *
+ * @return mixed
+ *   Returns Allegro client object when success, false otherwise.
+ */
+function allegro_client($login = TRUE, $reset = FALSE) {
+  if (!$reset) {
     $allegro = &drupal_static(__FUNCTION__);
   }
 
@@ -71,9 +82,10 @@ function allegro_test_connection($login, $password, $webapikey, $countryCode = 1
 }
 
 /**
- * Convert object to array
+ * Convert object to array.
  *
  * @param object $object
+ *
  * @return array
  */
 function allegro_object2array($object) {
@@ -110,14 +122,12 @@ function allegro_resize_image($url) {
   return $image;
 }
 
-function allegro_watchdog_exception($type, Exception $exception, $message = NULL, $variables = array(), $severity = WATCHDOG_ERROR, $link = NULL) {
-  return watchdog_exception($type, $exception, nl2br(check_plain($exception)));
-}
-
-function allegro_watchdog_debug($message) {
-  watchdog('allegro', '<pre>' . print_r($message, TRUE) . '</pre>');
-}
-
+/**
+ * Check if it possible to connetc with Allegro WebAPI.
+ *
+ * @return bool
+ *   True when connection was successful, false otherwise.
+ */
 function allegro_is_configured_correctly() {
   return allegro_client();
 }

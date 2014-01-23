@@ -61,7 +61,7 @@ class AllegroItemController extends DrupalDefaultEntityController {
     }
     catch (Exception $e) {
       $transaction->rollback();
-      allegro_watchdog_exception('allegro_item', $e, NULL, WATCHDOG_ERROR);
+      watchdog_exception('allegro_item', $e, $e->getMessage(), WATCHDOG_ERROR);
       return FALSE;
     }
   }

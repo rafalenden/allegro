@@ -58,11 +58,14 @@ function allegro_settings_form_submit($form, &$form_state) {
   }
 
   // Test SOAP connection.
-  $test_passed = allegro_test_connection($values['allegro_login'], $values['allegro_password'], $values['allegro_webapikey'], $values['allegro_country_code']);
+  $test_passed = allegro_test_connection(
+    $values['allegro_login'], $values['allegro_password'],
+    $values['allegro_webapikey'], $values['allegro_country_code']);
+
   if ($test_passed) {
-    drupal_set_message(t('Connected successfully to SOAP service.'));
+    drupal_set_message(t('Connected successfully to WebAPI service.'));
   }
   else {
-    drupal_set_message(t('Could not connect to SOAP service.'), 'error');
+    drupal_set_message(t('Could not connect to WebAPI service.'), 'error');
   }
 }

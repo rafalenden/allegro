@@ -59,7 +59,7 @@ function allegro_category_download_batch() {
   catch (SoapFault $e) {
     $transaction->rollback();
     drupal_set_message($e->faultstring, 'error');
-    allegro_watchdog_exception('allegro_category', $e, $e->faultactor);
+    watchdog_exception('allegro_category', $e, $e->faultactor);
   }
 }
 

@@ -433,9 +433,13 @@ function allegro_item_form_validate($form, &$form_state) {
     }
   }
 
-  $fields[2] = $category; // Category
-  $fields[3] = time(); // Start time
-  $fields[9] = variable_get('allegro_country_code'); // Country
+  // Category.
+  $fields[2] = $category;
+  // Start time.
+  $fields[3] = REQUEST_TIME;
+  // Country.
+  $fields[9] = variable_get('allegro_country_code');
+
   // Check if Allegro item fields are filled correctly.
   try {
     $form_state['allegro_client'] = $allegro = allegro_client();
@@ -447,7 +451,7 @@ function allegro_item_form_validate($form, &$form_state) {
     dpm($fields, '$fields');
     dpm($form_state, '$form_state');
     form_set_error('', $e->faultstring);
-    allegro_watchdog_exception('allegro_item', $e);
+    watchdog_exception('allegro_item', $e);
     return FALSE;
   }
 }
@@ -486,7 +490,7 @@ function allegro_item_form_submit($form, &$form_state) {
   }
   catch (SoapFault $e) {
     form_set_error('', $e->faultstring);
-    allegro_watchdog_exception('allegro', $e);
+    watchdog_exception('allegro', $e);
     return FALSE;
   }
 
@@ -512,7 +516,7 @@ function allegro_item_form_submit($form, &$form_state) {
 }
 
 /**
- * Form submit callback for delete confirmation.
+ * Form submit callback for deleting confirmation.
  *
  * @param array $form
  * @param array $form_state
@@ -567,9 +571,7 @@ function allegro_item_view($allegro_item, $view_mode = 'default') {
     '#markup' => l($external_url, $external_url),
   );
 
-  global $language;
-  $langcode = $language->language;
-  module_invoke_all('entity_view', $allegro_item, $entity_type, $view_mode, $langcode);
+  module_invoke_all('entity_view', $allegro_item, $entity_type, $view_mode, NULL);
   drupal_alter(array('allegro_item_page_view', 'entity_view'), $allegro_item->content, $entity_type);
 
   return $allegro_item->content;

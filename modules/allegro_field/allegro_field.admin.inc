@@ -9,11 +9,6 @@
  * Settings page.
  */
 function allegro_field_settings_form() {
-  if (!allegro_is_configured_correctly()) {
-    drupal_set_message(t('Allegro is not properly configured. Plese go to <a href="@config-url">configuration page</a> and set up correct login creditials.', array('@config-url' => url('admin/allegro/settings'))), 'error');
-    return array();
-  }
-
   $form = array();
   $form['update'] = array(
     '#type' => 'fieldset',
@@ -31,6 +26,12 @@ function allegro_field_settings_form() {
  * Menu callback: run a batch downloading Allegro fields.
  */
 function allegro_field_download_batch() {
+  // Check connection with WebAPI.
+  if (!allegro_is_configured_correctly()) {
+    drupal_set_message(t('Allegro is not properly configured. Plese go to <a href="@config-url">configuration page</a> and set up correct login creditials.', array('@config-url' => url('admin/allegro/settings'))), 'error');
+    return;
+  }
+
   $transaction = db_transaction();
   try {
     $batch = array(
@@ -55,7 +56,7 @@ function allegro_field_download_batch() {
   catch (SoapFault $e) {
     $transaction->rollback();
     drupal_set_message($e->faultstring, 'error');
-    allegro_watchdog_exception('allegro_field', $e, $e->faultactor);
+    watchdog_exception('allegro_field', $e, $e->faultactor);
   }
 }
 
