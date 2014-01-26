@@ -103,6 +103,10 @@ function allegro_test_connection($login = NULL, $password = NULL, $webapikey = N
     $countryCode = variable_get('allegro_country_code');
   }
 
+  if (!$login || !$password || !$webapikey || !$countryCode) {
+    return FALSE;
+  }
+
   try {
     Allegro::testConnection($login, $password, $webapikey, $countryCode);
     return TRUE;
