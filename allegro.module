@@ -60,7 +60,12 @@ function allegro_client($login = TRUE, $reset = FALSE) {
       }
     }
     catch (SoapFault $e) {
-      drupal_set_message($e->getMessage(), 'error');
+      if (module_exists('dblog') && user_access('access site reports')) {
+        drupal_set_message(t('An error occured while connecting to WebAPI service. Check <a href="@watchdog-url">watchdog</a> for more informations.', array('@watchdog-url' => url('admin/reports/dblog'))), 'error');
+      }
+      else {
+        drupal_set_message(t('An error occured while connecting to WebAPI service. Check logs for more informations.'), 'error');
+      }
       watchdog_exception('allegro', $e);
       unset($allegro);
     }
@@ -69,14 +74,40 @@ function allegro_client($login = TRUE, $reset = FALSE) {
   return !empty($allegro) ? $allegro : FALSE;
 }
 
-function allegro_test_connection($login, $password, $webapikey, $countryCode = 1) {
+/**
+ * Test connection to Allegro WebAPI service.
+ *
+ * @param  string $login
+ *   Service login.
+ * @param  string $password
+ *   Service password.
+ * @param  string $webapikey
+ *   API key to service.
+ * @param  int $countryCode
+ *   Country code of targeted market.
+ *
+ * @return bool
+ *   True when connection is successfull, false otherwise.
+ */
+function allegro_test_connection($login = NULL, $password = NULL, $webapikey = NULL, $countryCode = NULL) {
+  if (!$login) {
+    $login = variable_get('allegro_login');
+  }
+  if (!$password) {
+    $password = variable_get('allegro_password');
+  }
+  if (!$webapikey) {
+    $webapikey = variable_get('allegro_webapikey');
+  }
+  if (!$countryCode) {
+    $countryCode = variable_get('allegro_country_code');
+  }
+
   try {
     Allegro::testConnection($login, $password, $webapikey, $countryCode);
     return TRUE;
   }
   catch (SoapFault $e) {
-    drupal_set_message(t('Allegro: %fault', array('%fault' => $e->faultstring)), 'error');
-    watchdog_exception('allegro', $e);
     return FALSE;
   }
 }
@@ -120,14 +151,4 @@ function allegro_resize_image($url) {
   }
 
   return $image;
-}
-
-/**
- * Check if it possible to connetc with Allegro WebAPI.
- *
- * @return bool
- *   True when connection was successful, false otherwise.
- */
-function allegro_is_configured_correctly() {
-  return allegro_client();
 }

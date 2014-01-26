@@ -9,7 +9,8 @@
  * Settings page.
  */
 function allegro_category_settings_form() {
-  if (!allegro_is_configured_correctly()) {
+  // Check connection with WebAPI.
+  if (!allegro_test_connection()) {
     drupal_set_message(t('Allegro is not properly configured. Plese go to <a href="@config-url">configuration page</a> and set up correct login creditials.', array('@config-url' => url('admin/allegro/settings'))), 'error');
     return array();
   }
