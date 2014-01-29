@@ -8,8 +8,6 @@ class AllegroItemController extends DrupalDefaultEntityController {
   /**
    * Save Allegro item.
    *
-   * @global object $user
-   *
    * @param object $allegro_item
    *
    * @return mixed

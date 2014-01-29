@@ -31,7 +31,7 @@ function allegro_permission() {
 }
 
 /**
- * Connect to Allegro WebAPI and returns SoapClient object.
+ * Connect to WebAPI and returns Allegro object extending SoapClient class.
  *
  * @param  bool $login
  *   Log into the Soap service.
