@@ -28,7 +28,7 @@ function allegro_category_settings_form() {
 function allegro_category_download_batch() {
   // Check connection with WebAPI.
   if (!allegro_test_connection()) {
-    drupal_set_message(t('Allegro is not properly configured. Plese go to <a href="@config-url">configuration page</a> and set up correct login creditials.', array('@config-url' => url('admin/allegro/settings'))), 'error');
+    drupal_set_message(t('Allegro module is not properly configured. Please go to <a href="@config-url">configuration page</a> and set up correct login creditials.', array('@config-url' => url('admin/allegro/settings'))), 'error');
     return array();
   }
 
@@ -41,7 +41,7 @@ function allegro_category_download_batch() {
     );
     $allegro = allegro_client();
     if (!is_object($allegro)) {
-      throw new Exception('Error while connecting to Allegro.');
+      throw new Exception('Error occurred while connecting to Allegro WebAPI.');
     }
 
     $limit = 1000;
