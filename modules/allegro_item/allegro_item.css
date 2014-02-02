@@ -1,3 +1,20 @@
-.hierarchical-select-wrapper .hierarchical-select option.has-children {
-  padding-right: 20px;
+#allegro-item-category-wrapper .form-wrapper {
+  clear: both;
 }
+
+#allegro-item-category-wrapper .category-level {
+  float: left;
+}
+
+#allegro-item-category-wrapper .category-level {
+  float: left;
+}
+
+#allegro-item-category-wrapper .category-level label {
+  display: none;
+}
+
+.progress-disabled + *, .progress-disabled ~ *, .ajax-progress, .ajax-progress-throbber {
+  display: none;
+}
+

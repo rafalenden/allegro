@@ -163,28 +163,12 @@ function allegro_category_delete_by_country($country_code = NULL) {
 
 /*
  * -----------------------------------------
- * Hierarchical Select hooks implementation.
+ * Get category tree.
  * -----------------------------------------
  */
 
-/**
- * Implements hook_hierarchical_select_params().
- */
-function allegro_category_hierarchical_select_params() {
-  return array();
-}
 
-/**
- * Implements hook_hierarchical_select_root_level().
- */
-function allegro_category_hierarchical_select_root_level($params) {
-  return allegro_category_hierarchical_select_children(0, $params);
-}
-
-/**
- * Implements hook_hierarchical_select_children().
- */
-function allegro_category_hierarchical_select_children($parent, $params) {
+function allegro_category_hierarchy_select_children($parent) {
   $children = array();
   $categories = allegro_category_load_children($parent);
 
@@ -195,10 +179,7 @@ function allegro_category_hierarchical_select_children($parent, $params) {
   return $children;
 }
 
-/**
- * Implements hook_hierarchical_select_lineag().
- */
-function allegro_category_hierarchical_select_lineage($item, $params) {
+function allegro_category_hierarchy_select_lineage($item) {
   $lineage = array();
   do {
     $lineage[] = $item;
@@ -210,63 +191,4 @@ function allegro_category_hierarchical_select_lineage($item, $params) {
   while ($item > 0);
 
   return array_reverse($lineage);
-}
-
-/**
- * Implements hook_hierarchical_select_valid_item().
- */
-function allegro_category_hierarchical_select_valid_item($item, $params) {
-  if (is_numeric($item) && $item > 0) {
-    return TRUE;
-  }
-  else {
-    return FALSE;
-  }
-}
-
-/**
- * Implements hook_hierarchical_select_implementation_info().
- */
-function allegro_category_hierarchical_select_implementation_info() {
-  return array(
-    'hierarchy type' => t('Allegro Category'),
-    'entity type' => t('N/A'),
-  );
-}
-
-/**
- * Helper function to apply the HS config to a form item.
- */
-function _allegro_category_hierarchical_select_config() {
-  return array(
-    'module' => 'allegro_category',
-    'params' => array(),
-    'save_lineage' => 0,
-    'enforce_deepest' => 0,
-    'entity_count' => 0,
-    'require_entity' => 0,
-    'resizable' => 1,
-    'level_labels' => array(
-      'status' => 0,
-    ),
-    'dropbox' => array(
-      'status' => 0,
-    ),
-    'editability' => array(
-      'status' => 0,
-    ),
-    'animation_delay' => 1,
-    'render_flat_select' => 1,
-  );
-}
-
-/**
- * Implements hook_admin_paths().
- * @see https://drupal.org/node/1671336
- */
-function allegro_category_admin_paths() {
-  $paths = array(
-    'hierarchical_select_ajax/*' => TRUE,
-  );
-  return $paths;
 }

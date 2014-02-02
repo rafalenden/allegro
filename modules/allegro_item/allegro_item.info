@@ -5,7 +5,6 @@ core = 7.x
 
 ; Contrib modules
 dependencies[] = entity
-dependencies[] = hierarchical_select
 dependencies[] = tableform
 
 ; Allegro modules

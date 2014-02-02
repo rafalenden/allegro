@@ -53,6 +53,10 @@ function allegro_item_page_edit($allegro_item) {
   return drupal_get_form('allegro_item_form', $allegro_item);
 }
 
+function allegro_item_category_ajax_callback($form, &$form_state) {
+  return render($form['item']['category']);
+}
+
 /**
  * Form builder. Displays the Allegro item add/edit form.
  *
@@ -73,8 +77,7 @@ function allegro_item_form($form, &$form_state, $allegro_item) {
   }
 
   $module_path = drupal_get_path('module', 'allegro_item');
-  $form['#attached']['js'] = array($module_path . '/allegro_item.js');
-  drupal_add_css($module_path . '/allegro_item.css');
+  $form['#attached']['css'][] =  $module_path . '/allegro_item.css';
 
   // Set the id and identify this as an Allegro item edit form.
   $form['#id'] = 'allegro-item-form';
@@ -103,52 +106,77 @@ function allegro_item_form($form, &$form_state, $allegro_item) {
     '#value' => $sellformfields,
   );
 
-  // Category.
-  $form['item'][2] = array(
-    '#type' => 'hierarchical_select',
-    '#size' => 8,
-    '#config' => _allegro_category_hierarchical_select_config(),
-  ) + allegro_field_convert($sellformfields[2]);
-  unset($form['item'][2]['#maxlength']);
+  // dpm($form_state);
 
-  // Helper element for Hierarchical Select ajax handling.
-  $form['item']['extra_fields_helper'] = array(
-    '#type' => 'textfield',
-    '#id' => 'extra_fields_helper',
-    '#attributes' => array('style' => 'display: none'),
-    '#ajax' => array(
-      'callback' => 'allegro_item_category_fields_callback',
-      'event' => 'hs_changed',
-      'wrapper' => 'category-extra-fields',
-    ),
-  );
 
-  $form['item']['extra_fields'] = array(
+  if (!empty($form_state['triggering_element']['#value'])
+
+      ) {
+    $current_category = $form_state['triggering_element']['#value'];
+  }
+  else {
+    $current_category = 0;
+  }
+
+  $form_state['current_category'] = $current_category;
+
+  $form['item']['category'] = array(
+    '#prefix' => '<div id="allegro-item-category-wrapper">',
     '#type' => 'fieldset',
-    '#title' => t('Category related fields'),
-    '#prefix' => '<div id="category-extra-fields">',
+    '#title' => t('Category'),
     '#suffix' => '</div>',
-    '#attributes' => array('style' => 'display: none'),
   );
+
+  // Get path of selected categories.
+  $lineage = allegro_category_hierarchy_select_lineage($current_category);
+  if ($current_category != 0) {
+    $lineage[] = 0;
+  }
+  sort($lineage);
+
+  $has_children = TRUE;
+
+  foreach ($lineage as $level => $cid) {
+    $children = allegro_category_hierarchy_select_children($cid);
+    if (!$children) {
+      $has_children = FALSE;
+      break;
+    }
+    $form['item']['category']['level' . $level] = array(
+      '#type' => 'select',
+      '#size' => 10,
+      '#options' => $children,
+      '#prefix' => '<div class="category-level">',
+      '#suffix' => '</div>',
+      '#ajax' => array(
+        'callback' => 'allegro_item_category_ajax_callback',
+        'wrapper' => 'allegro-item-category-wrapper',
+        'progress' => array('type' => 'none'),
+      ),
+    );
+  }
 
   // Load fields for chosen category.
-  if (!empty($form_state['value'][2]['hierarchical_select']['selects'])) {
-    $category_lineage = $form_state['value'][2]['hierarchical_select']['selects'];
-    $count = count($category_lineage);
-    $cid = $category_lineage[$count - 1];
-    // Selected category is the lowest-level category.
-    if ($cid !== NULL) {
-      $category_sellformfields = allegro_field_load_for_multiple_categories($form_state['values'][2]);
-      foreach ($category_sellformfields as $sellformfield) {
-        $form['item']['extra_fields'][$sellformfield->fid] = array(
-          '#description' => NULL,
-        ) + allegro_field_convert($sellformfield);
-      }
-      if (!empty($form['item']['extra_fields'][$sellformfield->fid])) {
-        $form['item']['extra_fields']['#attributes'] = array('style' => '');
-      }
+  if (!$has_children) {
+    // Don't include global fields (cid = 0).
+    unset($lineage[0]);
+    $category_sellformfields = allegro_field_load_for_multiple_categories($lineage);
+
+    if (count($category_sellformfields) > 0) {
+      $form['item']['category']['extra_fields'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Category related fields'),
+      );
+    }
+
+    foreach ($category_sellformfields as $sellformfield) {
+      $form['item']['category']['extra_fields'][$sellformfield->fid] = array(
+        '#description' => NULL,
+        '#attributes' => array('class' => array('category-extra-field')),
+      ) + allegro_field_convert($sellformfield);
     }
   }
+
 
   // // Gallery.
   // $form['gallery'] = array(
@@ -403,13 +431,7 @@ function allegro_item_form_validate($form, &$form_state) {
     }
   }
 
-  $category = end($values[2]);
-  if (empty($category)) {
-    form_set_error(2, t('@field field is required.', array('@field' => $form['item'][2]['#title'])));
-  }
-  elseif (allegro_category_load_children($category)->rowCount() > 0) {
-    form_set_error(2, t('Selected category is not the lowest-level category.'));
-  }
+  $category = $form_state['current_category'];
 
   $form_errors = form_get_errors();
   if (!empty($form_errors)) {

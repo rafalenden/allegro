@@ -126,6 +126,7 @@ function allegro_get_fields() {
     32, // Kod pocztowy
     33, // Numer konta
     34, // Drugi numer konta
+
     // Przesyłka
     35, // Darmowe opcje przesyłki
     36, // Paczka pocztowa ekonomiczna (pierwsza sztuka)
@@ -410,6 +411,7 @@ function allegro_field_convert($allego_field) {
   $field['#sellformfield'] = $allego_field;
   $field['#description'] = stripslashes($allego_field->field_desc);
   $field['#size'] = $allego_field->length;
+  // $field['#weight'] = $allego_field->pos;
   // $field['#name'] = $allego_field->fid;
 
   if ($allego_field->opt == ALLEGRO_FIELD_REQUIRED) {
