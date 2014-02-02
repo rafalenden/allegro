@@ -53,8 +53,12 @@ function allegro_settings_form() {
 function allegro_settings_form_submit($form, &$form_state) {
   $values = &$form_state['values'];
 
+  // Hash password before saving.
   if (empty($values['allegro_password'])) {
     $values['allegro_password'] = variable_get('allegro_password');
+  }
+  else {
+    $values['allegro_password'] = base64_encode(hash('sha256', $values['allegro_password'], true));
   }
 
   // Test SOAP connection.

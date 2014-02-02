@@ -29,19 +29,10 @@ class Allegro extends SoapClient {
       $this->version = $this->getVersion();
 
       $password_encrypted = TRUE;
-      if (function_exists('hash') && in_array('sha256', hash_algos())) {
-        $this->userPassword = hash('sha256', $this->userPassword, TRUE);
-      }
-      elseif (function_exists('mhash') && is_int(MHASH_SHA256)) {
-        $this->userPassword = mhash(MHASH_SHA256, $this->userPassword);
-      }
-      else {
-        $password_encrypted = FALSE;
-      }
 
       $params = array(
         'userLogin' => $this->userLogin,
-        'userHashPassword' => base64_encode($this->userPassword),
+        'userHashPassword' => $this->userPassword,
         'countryCode' => $this->countryCode,
         'webapiKey' => $this->webapiKey,
         'localVersion' => $this->version,
