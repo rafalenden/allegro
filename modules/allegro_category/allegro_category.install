@@ -51,5 +51,5 @@ function allegro_category_schema() {
  */
 function allegro_category_uninstall() {
   variable_del('allegro_category_last_update');
-  allegro_category_delete_by_country();
+  db_delete('allegro_category')->execute();
 }

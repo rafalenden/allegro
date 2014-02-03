@@ -28,8 +28,6 @@ class Allegro extends SoapClient {
     try {
       $this->version = $this->getVersion();
 
-      $password_encrypted = TRUE;
-
       $params = array(
         'userLogin' => $this->userLogin,
         'userHashPassword' => $this->userPassword,
@@ -38,7 +36,7 @@ class Allegro extends SoapClient {
         'localVersion' => $this->version,
       );
 
-      if ($password_encrypted) {
+      if (self::passwordEncrypted()) {
         $this->session = $this->doLoginEnc($params);
       }
       else {
@@ -200,6 +198,16 @@ class Allegro extends SoapClient {
       1 => 'allegro.pl',
       228 => 'testwebapi.pl',
     );
+  }
+
+  public static function passwordEncrypted() {
+    if ((function_exists('hash') && in_array('sha256', hash_algos()))
+      || (function_exists('mhash') && is_int(MHASH_SHA256))) {
+      return TRUE;
+    }
+    else {
+      return FALSE;
+    }
   }
 
 }

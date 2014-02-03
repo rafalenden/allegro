@@ -155,5 +155,5 @@ function allegro_field_schema() {
  */
 function allegro_field_uninstall() {
   variable_del('allegro_field_last_update');
-  allegro_field_delete_all();
+  db_delete('allegro_field')->execute();
 }
