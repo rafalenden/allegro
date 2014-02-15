@@ -35,8 +35,8 @@ function allegro_settings_form() {
   );
   $form['allegro_country_code'] = array(
     '#type' => 'select',
-    '#title' => t('Allegro site'),
-    '#description' => t('Allegro site to connect with.'),
+    '#title' => t('Auction site'),
+    '#description' => t('Auction site to connect with.'),
     '#options' => Allegro::getCountries(),
     '#default_value' => variable_get('allegro_country_code', 1),
     '#required' => TRUE,
@@ -58,7 +58,7 @@ function allegro_settings_form_submit($form, &$form_state) {
   }
   elseif (Allegro::passwordEncrypted()) {
     // Encrypt password before saving.
-    $values['allegro_password'] = base64_encode(hash('sha256', $values['allegro_password'], true));
+    $values['allegro_password'] = base64_encode(hash('sha256', $values['allegro_password'], TRUE));
   }
 
   // Test SOAP connection.

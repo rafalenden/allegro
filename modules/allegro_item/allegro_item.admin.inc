@@ -66,13 +66,13 @@ function allegro_item_category_ajax_callback($form, &$form_state) {
  *   The Allegro item object to edit, which may be brand new.
  */
 function allegro_item_form($form, &$form_state, $allegro_item) {
-  if (!variable_get('allegro_field_last_update', NULL)) {
+  if (!variable_get('allegro_field_last_update')) {
     drupal_set_message(t('Field information is not downloaded from Allegro. <a href="@fields-url">Download field information</a>.', array('@fields-url' => url('admin/allegro/settings/fields'))), 'error');
   }
-  if (!variable_get('allegro_category_last_update', NULL)) {
+  if (!variable_get('allegro_category_last_update')) {
     drupal_set_message(t('Categories are not downloaded from Allegro. <a href="@fields-url">Download categories</a>.', array('@fields-url' => url('admin/allegro/settings/categories'))), 'error');
   }
-  if (!variable_get('allegro_field_last_update', NULL) || !variable_get('allegro_category_last_update', NULL)) {
+  if (!variable_get('allegro_field_last_update') || !variable_get('allegro_category_last_update')) {
     return array();
   }
 

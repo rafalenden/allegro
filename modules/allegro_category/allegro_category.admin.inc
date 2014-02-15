@@ -14,6 +14,19 @@ function allegro_category_settings_form() {
     '#type' => 'fieldset',
     '#title' => t('Update data'),
   );
+
+  if (!variable_get('allegro_category_last_update')) {
+    $message = t("Categories wasn't downloaded yet.");
+  }
+  else {
+    $total_categories = db_query('SELECT COUNT(*) FROM {allegro_category}')->fetchField();
+    $message = format_plural($total_categories, 'There is 1 downloaded category.', 'There is @count downloaded categories.');
+  }
+
+  $form['update']['status'] = array(
+    '#markup' => '<p>' . $message . '</p>',
+  );
+
   $form['update']['download_categories'] = array(
     '#type' => 'submit',
     '#value' => t('Update categories'),
@@ -78,7 +91,7 @@ function _allegro_category_download_batch_finished($success, $results = array(),
   if ($success) {
     drupal_set_message(t('The categories have been downloaded.'));
     watchdog('allegro_category', 'Categories was updated.');
-    variable_set('allegro_category_last_update', time());
+    variable_set('allegro_category_last_update', REQUEST_TIME);
   }
   else {
     drupal_set_message(t('The categories have not been properly downloaded.'), 'error');

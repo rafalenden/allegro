@@ -14,6 +14,19 @@ function allegro_field_settings_form() {
     '#type' => 'fieldset',
     '#title' => t('Update data'),
   );
+
+  if (!variable_get('allegro_field_last_update')) {
+    $message = t("Fields wasn't downloaded yet.");
+  }
+  else {
+    $total_categories = db_query('SELECT COUNT(*) FROM {allegro_field}')->fetchField();
+    $message = t('There is @count downloaded fields.', array('@count' => $total_categories));
+  }
+
+  $form['update']['status'] = array(
+    '#markup' => '<p>' . $message . '</p>',
+  );
+
   $form['update']['download_fields'] = array(
     '#type' => 'submit',
     '#value' => t('Update fields'),
