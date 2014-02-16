@@ -409,7 +409,13 @@ function allegro_field_convert($allego_field) {
 
   $field['#title'] = stripslashes($allego_field->title);
 
-  if (in_array($allego_field->type, array(ALLEGRO_FIELD_COMBOBOX, ALLEGRO_FIELD_RADIOBUTTON, ALLEGRO_FIELD_CHECKBOX))) {
+  $fields_with_options = array(
+    ALLEGRO_FIELD_COMBOBOX, ALLEGRO_FIELD_RADIOBUTTON, ALLEGRO_FIELD_CHECKBOX
+  );
+  if (in_array($allego_field->type, $fields_with_options)) {
+    $field['#default_value'] = $allego_field->def_value;
+  }
+  elseif ($allego_field->def_value != 0) {
     $field['#default_value'] = $allego_field->def_value;
   }
 
