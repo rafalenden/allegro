@@ -191,7 +191,6 @@ function allegro_item_form($form, &$form_state, $allegro_item) {
 
   for ($i = 16; $i <= ($form_state['gallery_count'] + 15); $i++) {
     $form['gallery']['images'][$i] = allegro_field_convert($sellformfields[$i]);
-    // Remove description.
   }
 
   if ($form_state['gallery_count'] < 8) {
@@ -209,7 +208,7 @@ function allegro_item_form($form, &$form_state, $allegro_item) {
 
   if ($form_state['gallery_count'] > 1) {
     $form['gallery']['remove_image'] = array(
-      '#type' => 'sybmit',
+      '#type' => 'submit',
       '#value' => t('Remove last image'),
       '#limit_validation_errors' => array(),
       '#submit' => array('allegro_item_gallery_remove_image'),
