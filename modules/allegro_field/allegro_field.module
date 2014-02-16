@@ -68,6 +68,11 @@ function allegro_field_create($fid = 0, $type = NULL, $value = NULL) {
   );
   // Check if this type of field really exists.
   if ($value && $type && isset($field['fvalue' . ucfirst($type)])) {
+    if ($type == 'image') {
+      $file = file_load($value);
+      $file->filepath = drupal_realpath($file->uri);
+      $value = base64_encode(file_get_contents(drupal_realpath($file->uri)));
+    }
     $field['fvalue' . ucfirst($type)] = $value;
   }
   return $field;

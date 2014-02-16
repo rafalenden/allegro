@@ -53,10 +53,6 @@ function allegro_item_page_edit($allegro_item) {
   return drupal_get_form('allegro_item_form', $allegro_item);
 }
 
-function allegro_item_category_ajax_callback($form, &$form_state) {
-  return render($form['item']['category']);
-}
-
 /**
  * Form builder. Displays the Allegro item add/edit form.
  *
@@ -106,19 +102,20 @@ function allegro_item_form($form, &$form_state, $allegro_item) {
     '#value' => $sellformfields,
   );
 
-  // dpm($form_state);
-
-
-  if (!empty($form_state['triggering_element']['#value'])
-
-      ) {
-    $current_category = $form_state['triggering_element']['#value'];
+  // Get current category ID.
+  if (isset($form_state['triggering_element']['#value']) && $form_state['triggering_element']['#type'] == 'select') {
+    $form_state['current_category'] = $form_state['triggering_element']['#value'];
   }
-  else {
-    $current_category = 0;
+  elseif (isset($form_state['values'])) {
+    $category_levels = preg_grep('/^level[\d]+$/', array_keys($form_state['values']));
+    $last_level = end($category_levels);
+    if (!empty($form_state['values'][$last_level])) {
+      $form_state['current_category'] = $form_state['values'][$last_level];
+    }
   }
-
-  $form_state['current_category'] = $current_category;
+  elseif (!isset($form_state['current_category'])) {
+    $form_state['current_category'] = 0;
+  }
 
   $form['item']['category'] = array(
     '#prefix' => '<div id="allegro-item-category-wrapper">',
@@ -128,8 +125,8 @@ function allegro_item_form($form, &$form_state, $allegro_item) {
   );
 
   // Get path of selected categories.
-  $lineage = allegro_category_hierarchy_select_lineage($current_category);
-  if ($current_category != 0) {
+  $lineage = allegro_category_hierarchy_select_lineage($form_state['current_category']);
+  if ($form_state['current_category'] != 0) {
     $lineage[] = 0;
   }
   sort($lineage);
@@ -177,23 +174,51 @@ function allegro_item_form($form, &$form_state, $allegro_item) {
     }
   }
 
+  // Gallery.
 
-  // // Gallery.
-  // $form['gallery'] = array(
-  //   '#title' => t('Gallery'),
-  //   '#type' => 'fieldset',
-  //   '#collapsible' => TRUE,
-  //   '#collapsed' => TRUE,
-  // );
-  // // Images
-  // for ($fid = 16; $fid <= 23; $fid++) {
-  //   $form['gallery']['image_' . $fid] = allegro_field_convert($sellformfields[$fid]);
-  //   if ($fid == 16) {
-  //     $gallery_desc = $form['gallery']['image_' . $fid]['#description'];
-  //   }
-  //   unset($form['gallery']['image_' . $fid]['#description']);
-  // }
-  // $form['gallery']['#description'] = $gallery_desc;
+  if (!isset($form_state['gallery_count'])) {
+    $form_state['gallery_count'] = 1;
+  }
+
+  $form['gallery'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Gallery'),
+    '#prefix' => '<div id="gallery-fieldset-wrapper">',
+    '#suffix' => '</div>',
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+  );
+
+  for ($i = 16; $i <= ($form_state['gallery_count'] + 15); $i++) {
+    $form['gallery']['images'][$i] = allegro_field_convert($sellformfields[$i]);
+    // Remove description.
+  }
+
+  if ($form_state['gallery_count'] < 8) {
+    $form['gallery']['add_image'] = array(
+      '#type' => 'submit',
+      '#value' => t('Add image'),
+      '#limit_validation_errors' => array(),
+      '#submit' => array('allegro_item_gallery_add_image'),
+      '#ajax' => array(
+        'callback' => 'allegro_item_gallery_callback',
+        'wrapper' => 'gallery-fieldset-wrapper',
+      ),
+    );
+  }
+
+  if ($form_state['gallery_count'] > 1) {
+    $form['gallery']['remove_image'] = array(
+      '#type' => 'sybmit',
+      '#value' => t('Remove last image'),
+      '#limit_validation_errors' => array(),
+      '#submit' => array('allegro_item_gallery_remove_image'),
+      '#ajax' => array(
+        'callback' => 'allegro_item_gallery_callback',
+        'wrapper' => 'gallery-fieldset-wrapper',
+      ),
+    );
+  }
 
   $form['offer'] = array(
     '#title' => t('Offer details'),
@@ -393,11 +418,41 @@ function allegro_item_form($form, &$form_state, $allegro_item) {
   return $form;
 }
 
+function allegro_item_category_ajax_callback($form, &$form_state) {
+  $form_state['current_category'] = $form_state['triggering_element']['#value'];
+  return $form['item']['category'];
+}
+
 /**
  * AJAX callback returning fields for selected category.
  */
 function allegro_item_category_fields_callback($form, &$form_state) {
   return $form['item']['extra_fields'];
+}
+
+function allegro_item_gallery_callback($form, &$form_state) {
+  return $form['gallery'];
+}
+
+/**
+ * Submit handler for the "Add image" button.
+ * Increments the max counter and causes a rebuild.
+ */
+function allegro_item_gallery_add_image($form, &$form_state) {
+  $form_state['gallery_count']++;
+  $form_state['rebuild'] = TRUE;
+  return $form['gallery'];
+}
+
+/**
+ * Submit handler for the "Remove" button.
+ * Removes last custom replacement.
+ */
+function allegro_item_gallery_remove_image($form, &$form_state) {
+  $form_state['gallery_count']--;
+  $form_state['rebuild'] = TRUE;
+  return $form['gallery'];
+
 }
 
 /**
@@ -407,7 +462,10 @@ function allegro_item_category_fields_callback($form, &$form_state) {
  *   TRUE if form has no errors, FALSE otherwise.
  */
 function allegro_item_form_validate($form, &$form_state) {
-  if (empty($form_state['submitted'])) {
+  // Form is not subbmited (AJAX).
+  if (empty($form_state['submitted'])
+      || in_array('allegro_item_gallery_add_image', $form_state['submit_handlers'])
+      || in_array('allegro_item_gallery_remove_image', $form_state['submit_handlers'])) {
     return TRUE;
   }
 
@@ -497,6 +555,7 @@ function allegro_item_form_submit($form, &$form_state) {
     $allegro = &$form_state['allegro_client'];
     $values = &$form_state['values'];
     $local_id = uniqid();
+
     $item = $allegro->newAuction($form_state['created_fields'], $local_id);
     $verified_item = $allegro->verifyItem($local_id);
     if ($item->itemId == $verified_item->itemId) {
