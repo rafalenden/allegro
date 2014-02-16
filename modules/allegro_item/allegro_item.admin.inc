@@ -162,7 +162,7 @@ function allegro_item_form($form, &$form_state, $allegro_item) {
     if (count($category_sellformfields) > 0) {
       $form['item']['category']['extra_fields'] = array(
         '#type' => 'fieldset',
-        '#title' => t('Category related fields'),
+        '#title' => t('Item parameters'),
       );
     }
 
