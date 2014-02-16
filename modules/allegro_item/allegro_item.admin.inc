@@ -229,8 +229,13 @@ function allegro_item_form($form, &$form_state, $allegro_item) {
 
   // Quantity.
   $form['offer'][5] = array(
+    '#title' => t('Quantity'),
     '#description' => '',
   ) + allegro_field_convert($sellformfields[5]);
+
+  $form['offer'][28] = array(
+    '#title' => '',
+  ) + allegro_field_convert($sellformfields[28]);
 
   // Buy now price.
   $form['offer'][8] = array(
