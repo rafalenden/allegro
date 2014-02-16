@@ -170,6 +170,7 @@ function allegro_item_form($form, &$form_state, $allegro_item) {
       $form['item']['category']['extra_fields'][$sellformfield->fid] = array(
         '#description' => NULL,
         '#attributes' => array('class' => array('category-extra-field')),
+        '#weight' => $sellformfield->pos,
       ) + allegro_field_convert($sellformfield);
     }
   }
@@ -392,21 +393,20 @@ function allegro_item_form($form, &$form_state, $allegro_item) {
   // $form['#after_build'][] = 'allegro_item_form_after_build';
 
   // Add the buttons.
-  $form['buttons'] = array();
-  $form['buttons']['#weight'] = 100;
-  $form['buttons']['submit'] = array(
+  $form['actions'] = array(
+    '#type' => 'actions',
+  );
+  $form['actions']['submit'] = array(
     '#type' => 'submit',
-    '#value' => t('Save'),
-    '#weight' => 5,
+    '#value' => t('Create auction'),
     '#submit' => array('allegro_item_form_submit'),
   );
 
   if (!empty($allegro_item->id)) {
-    $form['buttons']['delete'] = array(
+    $form['actions']['delete'] = array(
       '#access' => user_access('delete allegro items'),
       '#type' => 'submit',
       '#value' => t('Delete'),
-      '#weight' => 15,
       '#submit' => array('allegro_item_form_delete_submit'),
     );
   }
@@ -472,7 +472,7 @@ function allegro_item_form_validate($form, &$form_state) {
   $values = &$form_state['values'];
   field_attach_form_validate('allegro_item', $allegro_item, $form, $form_state);
 
-  $extra_fields = $form['item']['extra_fields'];
+  $extra_fields = isset($form['item']['extra_fields']) ? $form['item']['extra_fields'] : array();
   $extra_values = array();
 
   foreach ($extra_fields as $extra_field) {

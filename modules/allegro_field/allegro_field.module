@@ -484,6 +484,14 @@ function allegro_field_convert($allego_field) {
       $field['#type'] = 'date';
       break;
   }
+
+  if (isset($field['#maxlength']) && $field['#maxlength'] == 0) {
+    unset($field['#maxlength']);
+  }
+  if (isset($field['#size']) && $field['#size'] == 0) {
+    unset($field['#size']);
+  }
+
   return $field;
 }
 
