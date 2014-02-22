@@ -56,7 +56,7 @@ function allegro_settings_form_submit($form, &$form_state) {
   if (empty($values['allegro_password'])) {
     $values['allegro_password'] = variable_get('allegro_password');
   }
-  elseif (Allegro::passwordEncrypted()) {
+  elseif (Allegro::isPasswordEncrypted()) {
     // Encrypt password before saving.
     $values['allegro_password'] = base64_encode(hash('sha256', $values['allegro_password'], TRUE));
   }
