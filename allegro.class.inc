@@ -36,7 +36,6 @@ class Allegro extends SoapClient {
 
       $params = array(
         'userLogin' => $this->userLogin,
-        'userHashPassword' => $this->userPassword,
         'countryCode' => $this->countryCode,
         'webapiKey' => $this->webapiKey,
         'localVersion' => $this->version,
@@ -44,9 +43,9 @@ class Allegro extends SoapClient {
 
       if (self::isPasswordEncrypted()) {
         $this->session = $this->doLoginEnc($params);
+        $params['userHashPassword'] = $this->userPassword;
       }
       else {
-        unset($params['userHashPassword']);
         $params['userPassword'] = $this->userPassword;
         $this->session = $this->doLogin($params);
       }

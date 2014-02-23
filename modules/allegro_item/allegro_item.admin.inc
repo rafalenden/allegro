@@ -312,7 +312,7 @@ function allegro_item_form($form, &$form_state, $allegro_item) {
   // Shipping delay.
   if (isset($sellformfields[340])) {
     $form['payment_shipment'][340] = allegro_field_convert($sellformfields[340]);
-    $form['payment_shipment'][340]['#options'][1] = 'immediately';
+    $form['payment_shipment'][340]['#options'][1] = t('immediately');
     foreach ($form['payment_shipment'][340]['#options'] as $key => $value) {
       $days = $value / 24;
       if ($key > 1) {

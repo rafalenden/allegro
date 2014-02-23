@@ -84,7 +84,7 @@ function allegro_field_schema() {
         'type' => 'blob',
       ),
       'parent_id' => array(
-        'description' => 'Parent parameter identifier (his sell-form-param-id - only for dependent parameters not being on top of hierarchy. If a parameter is not a dependent one or if it can be found on top of hierarchy of dependent parameters, 0 value will be returned in the field).',
+        'description' => 'Parent parameter identifier (its sellFormParamId - only for dependent parameters not being on top of hierarchy. If a parameter is not a dependent one or if it can be found on top of hierarchy of dependent parameters, 0 value will be returned in the field).',
         'type' => 'int',
       ),
       'parent_value' => array(
