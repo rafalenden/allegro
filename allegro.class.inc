@@ -24,6 +24,12 @@ class Allegro extends SoapClient {
     return parent::__construct($this->serviceURL, $options);
   }
 
+  /**
+   * Log into WebAPI service.
+   *
+   * @return object
+   *   Allegro client object.
+   */
   public function login() {
     try {
       $this->version = $this->getVersion();
@@ -56,6 +62,21 @@ class Allegro extends SoapClient {
     }
   }
 
+  /**
+   * Tests connection with WebAPI.
+   *
+   * @param string $login
+   *   User login to WebAPI.
+   * @param string $password
+   *   User login to WebAPI.
+   * @param string $apiKey
+   *   Key to WebAPI.
+   * @param string $countryCode
+   *   Code of country to connect through WebAPI.
+   *
+   * @return object
+   *   Allegro client object.
+   */
   public static function testConnection($login, $password, $apiKey, $countryCode) {
     try {
       $test = new Allegro();
@@ -193,6 +214,12 @@ class Allegro extends SoapClient {
     return $this->doVerifyItem($params);
   }
 
+  /**
+   * Get available Allegro Group auction websites.
+   *
+   * @return array
+   *   List of services keyed by country ID.
+   */
   public static function getCountries() {
     return array(
       1 => 'allegro.pl',
@@ -200,6 +227,12 @@ class Allegro extends SoapClient {
     );
   }
 
+  /**
+   * Check if hashing functions are available.
+   *
+   * @return bool
+   *   TRUE when hashing is possible, FALSE otherwise.
+   */
   public static function isPasswordEncrypted() {
     if ((function_exists('hash') && in_array('sha256', hash_algos()))
       || (function_exists('mhash') && is_int(MHASH_SHA256))) {

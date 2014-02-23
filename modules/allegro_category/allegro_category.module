@@ -32,7 +32,7 @@ function allegro_category_load($cid) {
  * Loads multiply category objects from the database.
  *
  * @param $cids
- *   An array of catgeory IDs.
+ *   An array of category IDs.
  *
  * @return
  *   An array of category objects (NOT JET(indexed by cid)).

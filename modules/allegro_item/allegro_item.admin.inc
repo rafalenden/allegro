@@ -312,7 +312,7 @@ function allegro_item_form($form, &$form_state, $allegro_item) {
   // Shipping delay.
   if (isset($sellformfields[340])) {
     $form['payment_shipment'][340] = allegro_field_convert($sellformfields[340]);
-    $form['payment_shipment'][340]['#options'][1] = 'natychmiast';
+    $form['payment_shipment'][340]['#options'][1] = 'immediately';
     foreach ($form['payment_shipment'][340]['#options'] as $key => $value) {
       $days = $value / 24;
       if ($key > 1) {
@@ -336,7 +336,7 @@ function allegro_item_form($form, &$form_state, $allegro_item) {
     '#title' => t('Payment details'),
     '#description' => NULL,
   ) + allegro_field_convert($sellformfields[14]);
-  // Szczegóły w opisie
+  // Details in item description.
   unset($form['payment_shipment'][14]['#options'][16]);
 
   // First bank account.
@@ -466,7 +466,7 @@ function allegro_item_gallery_remove_image($form, &$form_state) {
  *   TRUE if form has no errors, FALSE otherwise.
  */
 function allegro_item_form_validate($form, &$form_state) {
-  // Form is not subbmited (AJAX).
+  // Form is not submitted (AJAX).
   if (empty($form_state['submitted'])
       || in_array('allegro_item_gallery_add_image', $form_state['submit_handlers'])
       || in_array('allegro_item_gallery_remove_image', $form_state['submit_handlers'])) {

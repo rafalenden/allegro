@@ -61,10 +61,10 @@ function allegro_client($login = TRUE, $reset = FALSE) {
     }
     catch (SoapFault $e) {
       if (module_exists('dblog') && user_access('access site reports')) {
-        drupal_set_message(t('An error occured while connecting to WebAPI service. Check <a href="@watchdog-url">watchdog</a> for more informations.', array('@watchdog-url' => url('admin/reports/dblog'))), 'error');
+        drupal_set_message(t('An error occurred while connecting to WebAPI service. Check <a href="@watchdog-url">watchdog</a> for more informations.', array('@watchdog-url' => url('admin/reports/dblog'))), 'error');
       }
       else {
-        drupal_set_message(t('An error occured while connecting to WebAPI service. Check logs for more informations.'), 'error');
+        drupal_set_message(t('An error occurred while connecting to WebAPI service. Check logs for more informations.'), 'error');
       }
       watchdog_exception('allegro', $e);
       unset($allegro);
@@ -87,7 +87,7 @@ function allegro_client($login = TRUE, $reset = FALSE) {
  *   Country code of targeted market.
  *
  * @return bool
- *   True when connection is successfull, false otherwise.
+ *   TRUE when connection is successful, FALSE otherwise.
  */
 function allegro_test_connection($login = NULL, $password = NULL, $webapikey = NULL, $countryCode = NULL) {
   if (!$login) {
@@ -131,28 +131,4 @@ function allegro_object2array($object) {
     $object = get_object_vars($object);
   }
   return array_map('allegro_object2array', $object);
-}
-
-/*
- * Unused.
- * Resizes images to pass Allegro validation.
- */
-function allegro_resize_image($url) {
-  $image = file_get_contents($url);
-
-  // właśnie tutaj używamy Base64 ręcznie, ale nigdzie indziej!
-  while (strlen(base64_encode($image)) > 200000) {
-    $temp = imagecreatefromstring($image);
-    $x = ceil(0.9 * imagesx($temp));
-    $y = ceil(0.9 * imagesy($temp));
-
-    $image = imagecreatetruecolor($x, $y);
-    imagecopyresized($image, $temp, 0, 0, 0, 0, $x, $y, imagesx($temp), imagesy($temp));
-
-    imagejpeg($image, 'temp.jpg', 75);
-    $image = file_get_contents('temp.jpg');
-    unlink('temp.jpg');
-  }
-
-  return $image;
 }

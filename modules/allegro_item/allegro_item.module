@@ -1,130 +1,6 @@
 <?php
 
 /**
- * Implements hook_entity_info().
- */
-function allegro_item_entity_info() {
-  $return['allegro_item'] = array(
-    'label' => t('Allegro item'),
-    'controller class' => 'AllegroItemController',
-    'base table' => 'allegro_item',
-    'uri callback' => 'allegro_item_uri',
-    'fieldable' => FALSE,
-    'entity keys' => array(
-      'id' => 'id',
-      'label' => 'title',
-    ),
-    'static cache' => TRUE,
-    'bundles' => array(
-      'allegro_item' => array(
-        'label' => t('Allegro item'),
-        'admin' => array(
-          'path' => 'admin/allegro/settings',
-          'access arguments' => array('administer allegro items'),
-        ),
-      ),
-    ),
-    'view modes' => array(
-      'full' => array(
-        'label' => t('Full content'),
-        'custom settings' => FALSE,
-      ),
-      'teaser' => array(
-        'label' => t('Teaser'),
-        'custom settings' => FALSE,
-      ),
-    ),
-  );
-  return $return;
-}
-
-/**
- * Entity uri callback.
- */
-function allegro_item_uri($allegro_item) {
-  return array(
-    'path' => allegro_item_url($allegro_item),
-  );
-}
-
-/**
- * Entity innternal URL.
- */
-function allegro_item_url($allegro_item) {
-  return 'admin/allegro/item/' . $allegro_item->id;
-}
-
-/**
- * Creates URL of Aallegro item.
- *
- * @param int $item_id
- *   External Allegro item ID.
- * @param int $country_code
- *   Country code of Allegro item.
- *
- * @return string
- *   External URL (with protocol) to Allegro item.
- */
-function allegro_item_url_external($item_id, $country_code = NULL) {
-  if (empty($country_code)) {
-    $country_code = variable_get('country_code', 1);
-  }
-  $countries = Allegro::getCountries();
-  return 'http://' . $countries[$country_code] . '/show_item.php?item=' . $item_id;
-}
-
-/**
- * Implements hook_field_extra_fields().
- */
-function allegro_item_field_extra_fields() {
-  $return['allegro_item']['allegro_item'] = array(
-    'form' => array(
-      'title' => array(
-        'label' => t('Title'),
-        'description' => t('The name of the Allegro item.'),
-        'weight' => -5,
-      ),
-    ),
-    'display' => array(
-      'title' => array(
-        'label' => t('Title'),
-        'description' => t('The name of the Allegro item.'),
-        'weight' => -5,
-      ),
-      'item_id' => array(
-        'label' => t('Item ID'),
-        'description' => t('External item ID.'),
-        'weight' => 0,
-      ),
-    ),
-  );
-  return $return;
-}
-
-/**
- * Implements hook_permission().
- */
-function allegro_item_permission() {
-  return array(
-    'administer allegro items' => array(
-      'title' => t('Administer Allegro items'),
-    ),
-    'create allegro items' => array(
-      'title' => t('Create Allegro items'),
-    ),
-    'update allegro items' => array(
-      'title' => t('Update Allegro items'),
-    ),
-    'view allegro items' => array(
-      'title' => t('View Allegro items'),
-    ),
-    'delete allegro items' => array(
-      'title' => t('Delete Allegro items'),
-    ),
-  );
-}
-
-/**
  * Implements hook_menu().
  */
 function allegro_item_menu() {
@@ -202,6 +78,154 @@ function allegro_item_menu() {
 }
 
 /**
+ * Implements hook_entity_info().
+ */
+function allegro_item_entity_info() {
+  $return['allegro_item'] = array(
+    'label' => t('Allegro item'),
+    'controller class' => 'AllegroItemController',
+    'base table' => 'allegro_item',
+    'uri callback' => 'allegro_item_uri',
+    'fieldable' => FALSE,
+    'entity keys' => array(
+      'id' => 'id',
+      'label' => 'title',
+    ),
+    'static cache' => TRUE,
+    'bundles' => array(
+      'allegro_item' => array(
+        'label' => t('Allegro item'),
+        'admin' => array(
+          'path' => 'admin/allegro/settings',
+          'access arguments' => array('administer allegro items'),
+        ),
+      ),
+    ),
+    'view modes' => array(
+      'full' => array(
+        'label' => t('Full content'),
+        'custom settings' => FALSE,
+      ),
+      'teaser' => array(
+        'label' => t('Teaser'),
+        'custom settings' => FALSE,
+      ),
+    ),
+  );
+  return $return;
+}
+
+/**
+ * Entity URI callback.
+ */
+function allegro_item_uri($allegro_item) {
+  return array(
+    'path' => allegro_item_url($allegro_item),
+  );
+}
+
+/**
+ * Entity internal URL.
+ */
+function allegro_item_url($allegro_item) {
+  return 'admin/allegro/item/' . $allegro_item->id;
+}
+
+/**
+ * Creates URL of Allegro item.
+ *
+ * @param int $item_id
+ *   External Allegro item ID.
+ * @param int $country_code
+ *   Country code of Allegro item.
+ *
+ * @return string
+ *   External URL (with protocol) to Allegro item.
+ */
+function allegro_item_url_external($item_id, $country_code = NULL) {
+  if (empty($country_code)) {
+    $country_code = variable_get('country_code', 1);
+  }
+  $countries = Allegro::getCountries();
+  return 'http://' . $countries[$country_code] . '/show_item.php?item=' . $item_id;
+}
+
+/**
+ * Implements hook_field_extra_fields().
+ */
+function allegro_item_field_extra_fields() {
+  $return['allegro_item']['allegro_item'] = array(
+    'form' => array(
+      'title' => array(
+        'label' => t('Title'),
+        'description' => t('The name of the Allegro item.'),
+        'weight' => -5,
+      ),
+    ),
+    'display' => array(
+      'title' => array(
+        'label' => t('Title'),
+        'description' => t('The name of the Allegro item.'),
+        'weight' => -5,
+      ),
+      'item_id' => array(
+        'label' => t('Item ID'),
+        'description' => t('External item ID.'),
+        'weight' => 0,
+      ),
+    ),
+  );
+  return $return;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function allegro_item_permission() {
+  return array(
+    'administer allegro items' => array(
+      'title' => t('Administer Allegro items'),
+    ),
+    'create allegro items' => array(
+      'title' => t('Create Allegro items'),
+    ),
+    'update allegro items' => array(
+      'title' => t('Update Allegro items'),
+    ),
+    'view allegro items' => array(
+      'title' => t('View Allegro items'),
+    ),
+    'delete allegro items' => array(
+      'title' => t('Delete Allegro items'),
+    ),
+  );
+}
+
+/*
+ * Unused.
+ * Resizes images to pass Allegro validation.
+ */
+function allegro_item_resize_image($url) {
+  $image = file_get_contents($url);
+
+  // właśnie tutaj używamy Base64 ręcznie, ale nigdzie indziej!
+  while (strlen(base64_encode($image)) > 200000) {
+    $temp = imagecreatefromstring($image);
+    $x = ceil(0.9 * imagesx($temp));
+    $y = ceil(0.9 * imagesy($temp));
+
+    $image = imagecreatetruecolor($x, $y);
+    imagecopyresized($image, $temp, 0, 0, 0, 0, $x, $y, imagesx($temp), imagesy($temp));
+
+    imagejpeg($image, 'temp.jpg', 75);
+    $image = file_get_contents('temp.jpg');
+    unlink('temp.jpg');
+  }
+
+  return $image;
+}
+
+/**
  * Sets the page title based on the specified Allegro item.
  *
  * @param object $allegro_item
@@ -221,10 +245,10 @@ function allegro_item_page_title($allegro_item) {
  * @param array $conditions
  *   An array of conditions on the {allegro_item} table in the form 'field' => $value.
  * @param bool $reset
- *   Whether to reset the internal entity_load cache.
+ *   Whether to reset the internal entity_load() cache.
  *
  * @return object
- *   An array of Allegro item objects indexed by nid.
+ *   An array of Allegro item objects indexed by NID.
  */
 function allegro_item_load_multiple($ids = array(), $conditions = array(), $reset = FALSE) {
   return entity_load('allegro_item', $ids, $conditions, $reset);
@@ -236,7 +260,7 @@ function allegro_item_load_multiple($ids = array(), $conditions = array(), $rese
  * @param $id
  *   The Allegro item ID.
  * @param $reset
- *   Whether to reset the allegro_load_multiple cache.
+ *   Whether to reset the allegro_load_multiple() cache.
  *
  * @return object
  *   A fully-populated Allegro item object.

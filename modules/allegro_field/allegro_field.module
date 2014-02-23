@@ -298,10 +298,10 @@ function allegro_field_load_for_category_and_parents($cid) {
  * Split field options (for checkboxes and select lists).
  *
  * @param string $string
- *   String containing options separeted width pipe "|" sign.
+ *   String containing options separated width pipe "|" sign.
  *
  * @return
- *   An array of options ready tu put into form element supporting "#options".
+ *   An array of options ready to put into form element supporting "#options".
  */
 function allegro_field_split($string) {
   return explode('|', $string);
@@ -316,7 +316,7 @@ function allegro_field_split($string) {
  *   Options values.
  *
  * @return
- *   An array of options ready tu put into form element supporting "#options".
+ *   An array of options ready to put into form element supporting "#options".
  */
 function allegro_field_create_options($keys, $values) {
   $keys = allegro_field_split($keys);
@@ -336,7 +336,7 @@ function allegro_field_create_options($keys, $values) {
  * Function already unused.
  *
  * @param string $human_readable
- *   Human readeable string.
+ *   Human readable string.
  *
  * @return
  *   Machine readable string.
@@ -472,7 +472,7 @@ function allegro_field_convert($allego_field) {
       $field['#default_value'] = array($field['#default_value']);
       break;
     case ALLEGRO_FIELD_IMAGE:
-      // Maximimu file size is 200KB.
+      // Maximum file size is 200KB.
       $max_filesize_mb = 0.2;
       $field['#type'] = 'managed_file';
       $field['#upload_validators'] = array(
@@ -579,18 +579,40 @@ function allegro_field_convert_shipping_fields_row($fid, $sellformfields) {
     if (empty($sellformfields[$i])) {
       continue;
     }
-    if ($i == $fid) {
-      $title = explode('(', $sellformfields[$i]->title);
-      $row[] = $title[0];
-    }
+
     $field = allegro_field_convert($sellformfields[$i]);
-    if ($i == $fid || $i == (100 + $fid)) {
-      $field['#field_suffix'] = 'zł';
+
+    switch ($i - $fid) {
+      // First column.
+      case 0:
+        $title = explode('(', $sellformfields[$i]->title);
+        $basic_fid = $fid;
+        $row['label_' . $fid] = array(
+          '#title' => $title[0],
+          '#type' => 'checkbox',
+        );
+        $field['#field_suffix'] = 'zł';
+        break;
+
+      // Second column.
+      case 100:
+        $field['#field_suffix'] = 'zł';
+        break;
+
+      // Third column.
+      case 200:
+        break;
     }
-    // Title of thoose fields is placed in table header.
+
+    $field['#states'] = array(
+      'visible' => array(':input[id="edit-label-' . $basic_fid . '"]' => array('checked' => TRUE)),
+    );
+
+    // Title of those fields is placed in table header.
     unset($field['#title']);
     $row[$i] = $field;
   }
+
   return $row;
 }
 
