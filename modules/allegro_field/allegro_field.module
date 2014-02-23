@@ -115,8 +115,8 @@ function allegro_get_fields() {
     // 3, // Data rozpoczęcia (timestamp/int)
     4, // Czas trawania (int)
     5, // Liczba sztuk (int)
-    // 6, // Cena wywoławcza w walucie używanej w danym serwisie
-    // 7, // Cena minimalna (float)
+    6, // Cena wywoławcza w walucie używanej w danym serwisie
+    7, // Cena minimalna (float)
     8, // Cena kup teraz (float)
     // 9, // Numer kraju, pokrywa się z numerem kraju używanym do wybierania wersji serwisu. (int)
     10, // Jedno z województw, ich listę można pobrać z informacji o tym polu. (int)

@@ -227,15 +227,49 @@ function allegro_item_form($form, &$form_state, $allegro_item) {
     '#collapsed' => FALSE,
   );
 
+
+  // Auction type.
+  // @TODO: Remove value of fields with FID 6 & 7 when submitting the form with "Buy now" auction type.
+  $form['offer']['auction_type'] = array(
+    '#title' => t('Auction type'),
+    '#type' => 'radios',
+    '#options' => array(
+      1 => t('Only Buy Now! (no bidding)'),
+      2 => t('Auction (bidding)'),
+    ),
+    '#required' => TRUE,
+  );
+
   // Quantity.
   $form['offer'][5] = array(
     '#title' => t('Quantity'),
     '#description' => '',
   ) + allegro_field_convert($sellformfields[5]);
 
+  // Quantity type.
   $form['offer'][28] = array(
     '#title' => '',
   ) + allegro_field_convert($sellformfields[28]);
+
+  // Starting price.
+  // @TODO: Remove value of this field when is not visible.
+  $form['offer'][6] = array(
+    '#field_suffix' => t('zł'),
+    '#description' => '',
+    '#states' => array(
+      'visible' => array(':input[name=auction_type]' => array('value' => 2)),
+    ),
+  ) + allegro_field_convert($sellformfields[6]);
+
+  // Minimum price.
+  // @TODO: Remove value of this field when is not visible.
+  $form['offer'][7] = array(
+    '#field_suffix' => t('zł'),
+    '#description' => '',
+    '#states' => array(
+      'visible' => array(':input[name=auction_type]' => array('value' => 2)),
+    ),
+  ) + allegro_field_convert($sellformfields[7]);
 
   // Buy now price.
   $form['offer'][8] = array(
@@ -270,7 +304,7 @@ function allegro_item_form($form, &$form_state, $allegro_item) {
     '#collapsed' => TRUE,
   );
 
-  // Jeśli w jednej dostawie wypełnisz wszystkie 3 pola musisz tak samo postąpić z pozostałymi dostawami.
+  // @TODO: Remove value of shipping costs for unchecked field when submitting the form .
 
   $prepayment = array(36, 38, 37, 39, 41, 43, 44, 46, 47, 50, 51);
 
