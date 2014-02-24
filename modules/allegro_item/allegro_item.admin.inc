@@ -13,23 +13,23 @@
  */
 function allegro_item_list() {
   $query = new EntityFieldQuery();
-  $query
-   ->entityCondition('entity_type', 'allegro_item')
-   ->propertyOrderBy('created', 'DESC')
-   ->range(0, 5);
-  $result = $query->execute();
 
-  if (empty($result['allegro_item'])) {
+  $entities = $query->entityCondition('entity_type', 'allegro_item')
+   ->propertyOrderBy('created', 'DESC')
+   ->pager(15)
+   ->execute();
+
+  if (empty($entities['allegro_item'])) {
     return t('No Allegro items added.');
   }
 
-  $allegro_items = allegro_item_load_multiple(array_keys($result['allegro_item']));
+  $allegro_items = allegro_item_load_multiple(array_keys($entities['allegro_item']));
 
   foreach ($allegro_items as $allegro_item) {
     $items[] = l($allegro_item->title, allegro_item_url($allegro_item));
   }
 
-  return theme('item_list', array('items' => $items));
+  return theme('item_list', array('items' => $items)) . theme('pager');
 }
 
 /**
