@@ -565,9 +565,12 @@ function allegro_item_form_validate($form, &$form_state) {
     $form_state['checked_item'] = $allegro->checkNewAuction($form_state['created_fields']);
   }
   catch (SoapFault $e) {
-    dpm($allegro, '$allegro');
-    dpm($fields, '$fields');
-    dpm($form_state, '$form_state');
+    if (function_exists('dpm')) {
+      dpm($allegro, '$allegro');
+      dpm($fields, '$fields');
+      dpm($form_state, '$form_state');
+    }
+
     form_set_error('', $e->faultstring);
     watchdog_exception('allegro_item', $e);
     return FALSE;
