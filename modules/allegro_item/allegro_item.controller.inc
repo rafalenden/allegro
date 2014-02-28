@@ -40,12 +40,17 @@ class AllegroItemController extends DrupalDefaultEntityController {
       // Give modules the opportunity to prepare field data for saving.
       field_attach_presave('allegro_item', $allegro_item);
 
+      $allegro = allegro_client();
+
       // If this is a new Allegro item...
       if ($allegro_item->is_new) {
-        $allegro = allegro_client();
         $local_id = uniqid();
 
-        $new_item = $allegro->newAuction($allegro_item->sellformfields, $local_id);
+        if (empty($allegro_item->sellformfields_prepared) && !empty($allegro_item->sellformfields)) {
+          $allegro_item->sellformfields_prepared = allegro_field_prepare_multiple($allegro_item->sellformfields);
+        }
+
+        $new_item = $allegro->newAuction($allegro_item->sellformfields_prepared, $local_id);
         $verified_item = $allegro->verifyItem($local_id);
 
         if ($new_item->itemId != $verified_item->itemId) {

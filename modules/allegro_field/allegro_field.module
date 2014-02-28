@@ -32,7 +32,7 @@ function allegro_field_menu() {
 }
 
 /**
- * Creates Allegro field ready to send via SOAP service.
+ * Prepares Allegro field ready for sending via SOAP service.
  *
  * @param int $fid
  *   Field ID.
@@ -44,7 +44,7 @@ function allegro_field_menu() {
  * @return array
  *   Field defined as array containing all necessary informations.
  */
-function allegro_field_create($fid = 0, $type = NULL, $value = NULL) {
+function allegro_field_prepare($fid = 0, $type = NULL, $value = NULL) {
   $field = array(
     'fid' => $fid,
     'fvalueString' => '',
@@ -79,7 +79,7 @@ function allegro_field_create($fid = 0, $type = NULL, $value = NULL) {
 }
 
 /**
- * Creates Allegro fields multple at once ready to send via SOAP service.
+ * Prepares multple Allegro fields for sending via SOAP service to WebAPI.
  *
  * @param array $fields
  *   Fields containing fid => value keypairs.
@@ -87,14 +87,14 @@ function allegro_field_create($fid = 0, $type = NULL, $value = NULL) {
  * @return array
  *   Fields array containing all necessary informations (NOT JET(indexed by fid)).
  */
-function allegro_field_create_multiple(Array $fields = array()) {
+function allegro_field_prepare_multiple($fields = array()) {
   $sellformfields = allegro_field_load_multiple(array_keys($fields));
   $allegro_fields = array();
   foreach ($fields as $fid => $value) {
     if (!empty($value) || $value === '0') {
       $type = allegro_field_get_type($sellformfields[$fid]->res_type);
-      $allegro_fields[] = allegro_field_create($fid, $type, $value);
-      // TODO: $allegro_fields[$fid] = allegro_field_create($fid, $type, $value);
+      $allegro_fields[] = allegro_field_prepare($fid, $type, $value);
+      // TODO: $allegro_fields[$fid] = allegro_field_prepare($fid, $type, $value);
     }
   }
   return $allegro_fields;
