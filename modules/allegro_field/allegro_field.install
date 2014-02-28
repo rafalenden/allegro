@@ -120,13 +120,13 @@ function allegro_field_schema() {
         'not null' => TRUE,
       ),
       'fid' => array(
-        'description' => '',
+        'description' => 'Allegro field ID.',
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
       ),
       'value' => array(
-        'description' => '',
+        'description' => ' Allegro field value.',
         'type' => 'blob',
       ),
     ),

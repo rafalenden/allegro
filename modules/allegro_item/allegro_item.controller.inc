@@ -27,11 +27,33 @@ class AllegroItemController extends DrupalDefaultEntityController {
       }
       $allegro_item->changed = REQUEST_TIME;
 
+      if (empty($allegro_item->country_code)) {
+        $allegro_item->country_code = variable_get('allegro_country_code', 1);
+      }
+
+      // Set the Allegro_item uid if it's being created at this time.
+      if (empty($allegro_item->uid)) {
+        global $user;
+        $allegro_item->uid = $user->uid;
+      }
+
       // Give modules the opportunity to prepare field data for saving.
       field_attach_presave('allegro_item', $allegro_item);
 
       // If this is a new Allegro item...
       if ($allegro_item->is_new) {
+        $allegro = allegro_client();
+        $local_id = uniqid();
+
+        $new_item = $allegro->newAuction($allegro_item->sellformfields, $local_id);
+        $verified_item = $allegro->verifyItem($local_id);
+
+        if ($new_item->itemId != $verified_item->itemId) {
+          throw new Exception(t('Unknown error occurred while validating item.'));
+        }
+
+        $allegro_item->external_id = $verified_item->itemId;
+
         // Save the new Allegro item.
         drupal_write_record('allegro_item', $allegro_item);
         $op = 'insert';
@@ -60,7 +82,7 @@ class AllegroItemController extends DrupalDefaultEntityController {
     catch (Exception $e) {
       $transaction->rollback();
       watchdog_exception('allegro_item', $e, $e->getMessage(), WATCHDOG_ERROR);
-      return FALSE;
+      throw $e;
     }
   }
 

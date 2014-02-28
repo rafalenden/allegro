@@ -54,7 +54,7 @@ function allegro_category_download_batch() {
     );
     $allegro = allegro_client();
     if (!is_object($allegro)) {
-      throw new Exception('Error occurred while connecting to Allegro WebAPI.');
+      throw new Exception(t('Error occurred while connecting to Allegro WebAPI.'));
     }
 
     $limit = 1000;

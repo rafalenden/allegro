@@ -593,48 +593,28 @@ function allegro_item_form_submit($form, &$form_state) {
 
   // Sending verified item to Allegro.
   try {
-    $allegro = &$form_state['allegro_client'];
-    $values = &$form_state['values'];
-    $local_id = uniqid();
+    $allegro = allegro_client();
 
-    $item = $allegro->newAuction($form_state['created_fields'], $local_id);
-    $verified_item = $allegro->verifyItem($local_id);
-    if ($item->itemId == $verified_item->itemId) {
-      $item_link = l($values[1], allegro_item_url_external($verified_item->itemId, $allegro->countryCode));
-      drupal_set_message(t('Auction !auction-link (%item_id) created successfully.', array('!auction-link' => $item_link, '%item_id' => $verified_item->itemId)));
-      drupal_set_message(t('Detailed description of costs for listing an offer: <pre>@costs</pre>', array('@costs' => $form_state['checked_item']->itemPriceDesc)));
-    }
-    else {
-      form_set_error('', t('Unknown error occurred while validating item.'));
-      watchdog('allegro', 'Unknown error occurred while validating item');
-      return FALSE;
-    }
+    $allegro_item = &$form_state['allegro_item'];
+    $allegro_item->title = $form_state['values'][1];
+    $allegro_item->sellformfields = $form_state['created_fields'];
+
+    field_attach_submit('allegro_item', $allegro_item, $form, $form_state);
+    $allegro_item = allegro_item_save($allegro_item);
+
+    $item_external_url = allegro_item_url_external($allegro_item->external_id, $allegro_item->country_code);
+    $item_link = l($allegro_item->title, $item_external_url);
+
+    drupal_set_message(t('Auction !auction-link (%item_id) created successfully.', array('!auction-link' => $item_link, '%item_id' => $allegro_item->external_id)));
+
+    drupal_set_message(t('Detailed description of costs for listing an offer: <pre>@costs</pre>', array('@costs' => $form_state['checked_item']->itemPriceDesc)));
+
+    $form_state['redirect'] = allegro_item_url($allegro_item);
   }
   catch (SoapFault $e) {
     form_set_error('', $e->faultstring);
-    watchdog_exception('allegro', $e);
     return FALSE;
   }
-
-  // Saving Allegro item entity to DB.
-  $allegro_item = &$form_state['allegro_item'];
-  $allegro_item->external_id = $item->itemId;
-
-  if (empty($allegro_item->country_code)) {
-    $allegro_item->country_code = variable_get('allegro_country_code', 1);
-  }
-
-  // Set the Allegro_item uid if it's being created at this time.
-  if (empty($allegro_item->uid)) {
-    $allegro_item->uid = $user->uid;
-  }
-
-  $allegro_item->title = $form_state['values'][1];
-
-  field_attach_submit('allegro_item', $allegro_item, $form, $form_state);
-  allegro_item_save($allegro_item);
-  drupal_set_message(t('Allegro item saved.'));
-  $form_state['redirect'] = allegro_item_url($allegro_item);
 }
 
 /**
@@ -657,8 +637,6 @@ function allegro_item_form_delete_submit($form, &$form_state) {
 
 /**
  * Menu callback to display an Allegro item entity.
- *
- * @global object $language
  *
  * @param object $allegro_item
  * @param string $view_mode
