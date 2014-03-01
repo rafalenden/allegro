@@ -62,6 +62,19 @@ class AllegroItemController extends DrupalDefaultEntityController {
         // Save the new Allegro item.
         drupal_write_record('allegro_item', $allegro_item);
         $op = 'insert';
+
+        // Save values of fields.
+        $query = db_insert('allegro_field_data')->fields(array('item_id', 'fid', 'value'));
+        foreach ($allegro_item->sellformfields as $fid => $value) {
+          $query->values(
+            array(
+              'item_id' => $allegro_item->id,
+              'fid' => $fid,
+              'value' => $value,
+            )
+          );
+        }
+        $query->execute();
       }
       else {
         // Save the updated Allegro item.

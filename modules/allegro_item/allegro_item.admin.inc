@@ -561,6 +561,7 @@ function allegro_item_form_validate($form, &$form_state) {
   // Check if Allegro item fields are filled correctly.
   try {
     $allegro = allegro_client();
+    $form_state['sellformfields'] = $fields;
     $form_state['sellformfields_prepared'] = allegro_field_prepare_multiple($fields);
     $form_state['checked_item'] = $allegro->checkNewAuction($form_state['sellformfields_prepared']);
   }
@@ -597,6 +598,7 @@ function allegro_item_form_submit($form, &$form_state) {
 
     $allegro_item = &$form_state['allegro_item'];
     $allegro_item->title = $form_state['values'][1];
+    $allegro_item->sellformfields = $form_state['sellformfields'];
     $allegro_item->sellformfields_prepared = $form_state['sellformfields_prepared'];
 
     field_attach_submit('allegro_item', $allegro_item, $form, $form_state);
