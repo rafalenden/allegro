@@ -17,6 +17,7 @@ function allegro_item_menu() {
     'file' => 'allegro_item.admin.inc',
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
+
   // Settings.
   $items['admin/allegro/settings'] = array(
     'title' => 'Settings',
@@ -32,6 +33,7 @@ function allegro_item_menu() {
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'weight' => -10,
   );
+
   // Allegro item.
   $items['admin/allegro/item/add'] = array(
     'title' => 'Add Allegro item',
@@ -57,7 +59,7 @@ function allegro_item_menu() {
   $items['admin/allegro/item/%allegro_item/edit'] = array(
     'title' => 'Edit',
     'page callback' => 'allegro_item_page_edit',
-    'page arguments' => array(1),
+    'page arguments' => array(3),
     'access arguments' => array('update allegro items'),
     'type' => MENU_LOCAL_TASK,
     'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
@@ -85,13 +87,14 @@ function allegro_item_entity_info() {
     'label' => t('Allegro item'),
     'controller class' => 'AllegroItemController',
     'base table' => 'allegro_item',
+    'static cache' => TRUE,
+    'load_hook' => 'allegro_item_load',
     'uri callback' => 'allegro_item_uri',
     'fieldable' => FALSE,
     'entity keys' => array(
       'id' => 'id',
       'label' => 'title',
     ),
-    'static cache' => TRUE,
     'bundles' => array(
       'allegro_item' => array(
         'label' => t('Allegro item'),

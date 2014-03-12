@@ -31,34 +31,29 @@ class Allegro extends SoapClient {
    *   Allegro client object.
    */
   public function login() {
-    try {
-      $this->version = $this->getVersion();
+    $this->version = $this->getVersion();
 
-      $params = array(
-        'userLogin' => $this->userLogin,
-        'countryCode' => $this->countryCode,
-        'webapiKey' => $this->webapiKey,
-        'localVersion' => $this->version,
-      );
+    $params = array(
+      'userLogin' => $this->userLogin,
+      'countryCode' => $this->countryCode,
+      'webapiKey' => $this->webapiKey,
+      'localVersion' => $this->version,
+    );
 
-      if (self::isPasswordEncrypted()) {
-        $params['userHashPassword'] = $this->userPassword;
-        $this->session = $this->doLoginEnc($params);
-      }
-      else {
-        $params['userPassword'] = $this->userPassword;
-        $this->session = $this->doLogin($params);
-      }
-
-      $this->sid = $this->session->sessionHandlePart;
-      $this->userId = $this->session->userId;
-      $this->logged = TRUE;
-
-      return $this;
+    if (self::isPasswordEncrypted()) {
+      $params['userHashPassword'] = $this->userPassword;
+      $this->session = $this->doLoginEnc($params);
     }
-    catch (SoapFault $e) {
-      throw new SoapFault($e->faultcode, $e->faultstring);
+    else {
+      $params['userPassword'] = $this->userPassword;
+      $this->session = $this->doLogin($params);
     }
+
+    $this->sid = $this->session->sessionHandlePart;
+    $this->userId = $this->session->userId;
+    $this->logged = TRUE;
+
+    return $this;
   }
 
   /**
@@ -77,18 +72,13 @@ class Allegro extends SoapClient {
    *   Allegro client object.
    */
   public static function testConnection($login, $password, $apiKey, $countryCode) {
-    try {
-      $test = new Allegro();
-      $test->userLogin = $login;
-      $test->userPassword = $password;
-      $test->webapiKey = $apiKey;
-      $test->countryCode = $countryCode;
-      $test->login();
-      return TRUE;
-    }
-    catch (SoapFault $e) {
-      throw new SoapFault($e->faultcode, $e->faultstring);
-    }
+    $test = new Allegro();
+    $test->userLogin = $login;
+    $test->userPassword = $password;
+    $test->webapiKey = $apiKey;
+    $test->countryCode = $countryCode;
+    $test->login();
+    return TRUE;
   }
 
   public function querySysStatus($sysvar = 3) {

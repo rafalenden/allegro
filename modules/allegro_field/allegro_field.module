@@ -212,10 +212,14 @@ function allegro_field_load($fid) {
  * @return
  *   An array of field objects indexed by fid.
  */
-function allegro_field_load_multiple($fids) {
+function allegro_field_load_multiple($fids, $country_code = NULL) {
+  if (empty($country_code)) {
+    $country_code = variable_get('allegro_country_code', 1);
+  }
+
   $result = db_select('allegro_field', 'f')
    ->condition('f.fid', $fids, 'IN')
-   ->condition('f.country_code', variable_get('allegro_country_code', 1), '=')
+   ->condition('f.country_code', $country_code)
    ->fields('f', array(
      'country_code', 'fid', 'title', 'cat', 'type', 'res_type', 'def_value', 'opt',
      'pos', 'length', 'min_value', 'max_value', 'description', 'opts_values',
@@ -228,6 +232,29 @@ function allegro_field_load_multiple($fids) {
   $sellformfields = array();
   while ($sellformfield = $result->fetch()) {
     $sellformfields[$sellformfield->fid] = $sellformfield;
+  }
+  return $sellformfields;
+}
+
+/**
+ * Loads "sell form fields" data from the database.
+ *
+ * @param array $fids
+ *   An array of fields IDs.
+ *
+ * @return
+ *   An array of field objects indexed by fid.
+ */
+function allegro_field_load_multiple_data($item_id) {
+  $result = db_select('allegro_field_data', 'fd')
+   ->condition('fd.item_id', $item_id)
+   ->fields('fd', array('item_id', 'fid', 'value'))
+   ->orderBy('fd.fid')
+   ->execute();
+
+  $sellformfields = array();
+  while ($sellformfield = $result->fetch()) {
+    $sellformfields[$sellformfield->fid] = $sellformfield->value;
   }
   return $sellformfields;
 }
@@ -518,7 +545,7 @@ function allegro_field_convert_multiple($sellformfields = array(), $show_titles 
   foreach ($sellformfields as $key => $sellformfield) {
     if (is_numeric($key)) {
       if ($generate_keys) {
-        $key = 'fid_' . $sellformfield->fid;
+        $key = $sellformfield->fid;
       }
       else {
         $key = $sellformfield->fid;
