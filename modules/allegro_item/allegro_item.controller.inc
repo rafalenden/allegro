@@ -77,9 +77,20 @@ class AllegroItemController extends DrupalDefaultEntityController {
         $query->execute();
       }
       else {
+        $changed_item = $allegro->changeItemFields($allegro_item->external_id, $allegro_item->sellformfields_prepared);
+
         // Save the updated Allegro item.
         drupal_write_record('allegro_item', $allegro_item, 'id');
         $op = 'update';
+
+        // Update values of fields.
+        foreach ($allegro_item->fields_to_update as $fid => $value) {
+          db_update('allegro_field_data')
+            ->fields(array('value' => $value))
+            ->condition('item_id', $allegro_item->id)
+            ->condition('fid', $fid)
+            ->execute();
+        }
       }
 
       // Save fields.

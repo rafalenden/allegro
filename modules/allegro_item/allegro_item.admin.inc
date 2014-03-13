@@ -87,6 +87,10 @@ function allegro_item_form($form, &$form_state, $allegro_item) {
   // Editing Allegro item.
   if (!empty($allegro_item->id)) {
     $sellformfields_data = allegro_field_load_multiple_data($allegro_item->id);
+    $form['sellformfields_data'] = array(
+      '#type' => 'value',
+      '#value' => $sellformfields_data,
+    );
 
     foreach ($sellformfields_data as $fid => $value) {
       if (isset($sellformfields_converted[$fid])) {
@@ -540,6 +544,7 @@ function allegro_item_form_validate($form, &$form_state) {
   }
 
   $allegro_item = $form_state['allegro_item'];
+  $is_new = empty($allegro_item->id);
   $values = &$form_state['values'];
   field_attach_form_validate('allegro_item', $allegro_item, $form, $form_state);
 
@@ -585,8 +590,7 @@ function allegro_item_form_validate($form, &$form_state) {
 
   // Category.
   $fields[2] = $category;
-  // Start time.
-  $fields[3] = REQUEST_TIME;
+
   // Country.
   $fields[9] = variable_get('allegro_country_code');
 
@@ -594,12 +598,24 @@ function allegro_item_form_validate($form, &$form_state) {
   try {
     $allegro = allegro_client();
     $form_state['sellformfields'] = $fields;
-    $form_state['sellformfields_prepared'] = allegro_field_prepare_multiple($fields);
-    $form_state['checked_item'] = $allegro->checkNewAuction($form_state['sellformfields_prepared']);
+
+    if ($is_new) {
+      // Start time.
+      $fields[3] = REQUEST_TIME;
+      $form_state['sellformfields_prepared'] = allegro_field_prepare_multiple($fields);
+      $form_state['checked_item'] = $allegro->checkNewAuction($form_state['sellformfields_prepared']);
+    }
+    else {
+      $fields = array_diff($fields, $form['sellformfields_data']['#value']);
+      $allegro_item->fields_to_update = $fields;
+      $form_state['sellformfields_prepared'] = allegro_field_prepare_multiple($fields);
+      $form_state['checked_item'] = $allegro->changeItemFields($allegro_item->external_id, $form_state['sellformfields_prepared'], array(), TRUE);
+    }
   }
   catch (SoapFault $e) {
     if (function_exists('dpm')) {
       dpm($allegro, '$allegro');
+      dpm($allegro_item, '$allegro_item');
       dpm($fields, '$fields');
       dpm($form_state, '$form_state');
     }

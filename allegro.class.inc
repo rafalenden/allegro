@@ -204,6 +204,34 @@ class Allegro extends SoapClient {
   }
 
   /**
+   * This method allows for comprehensive offer editing both listed and planned to be listed.
+   *
+   * @see http://allegro.pl/webapi/documentation.php/show/id,1190
+   *
+   * @param int $itemId
+   *   User's session identifier received using the doLogin(Enc) method.
+   * @param array $fieldsToModify
+   *   Identifier of an offer to be changed. The offer may be ongoing or planned to be listed.
+   * @param array $fieldsToRemove
+   *   Array of structures containing information on sale form fields that are to be changed or added.
+   * @param bool $previewOnly
+   *   Array of field identifiers (fids) that are to be removed.
+   *
+   * @return array
+   */
+  public function changeItemFields($itemId, $fieldsToModify = array(), $fieldsToRemove = array(), $previewOnly = FALSE) {
+    $params = array(
+      'sessionId' => $this->sid,
+      'itemId' => $itemId,
+      'fieldsToModify' => $fieldsToModify,
+      'fieldsToRemove' => $fieldsToRemove,
+      'previewOnly' => $previewOnly ? 1 : 0,
+    );
+
+    return $this->doChangeItemFields($params);
+  }
+
+  /**
    * Get available Allegro Group auction websites.
    *
    * @return array
