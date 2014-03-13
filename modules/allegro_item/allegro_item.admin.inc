@@ -634,14 +634,25 @@ function allegro_item_form_submit($form, &$form_state) {
     $allegro_item->sellformfields_prepared = $form_state['sellformfields_prepared'];
 
     field_attach_submit('allegro_item', $allegro_item, $form, $form_state);
+
+    $is_new = empty($allegro_item->id);
     $allegro_item = allegro_item_save($allegro_item);
+    $t_args = array('%title' => $allegro_item->title);
 
-    $item_external_url = allegro_item_url_external($allegro_item->external_id, $allegro_item->country_code);
-    $item_link = l($allegro_item->title, $item_external_url);
+    if ($is_new) {
+      $item_external_url = allegro_item_url_external($allegro_item->external_id, $allegro_item->country_code);
+      $item_link = l($allegro_item->title, $item_external_url);
 
-    drupal_set_message(t('Auction !auction-link (%item_id) created successfully.', array('!auction-link' => $item_link, '%item_id' => $allegro_item->external_id)));
+      drupal_set_message(t('Auction !auction-link (%item_id) created successfully.', array('!auction-link' => $item_link, '%item_id' => $allegro_item->external_id)));
 
-    drupal_set_message(t('Detailed description of costs for listing an offer: <pre>@costs</pre>', array('@costs' => $form_state['checked_item']->itemPriceDesc)));
+      drupal_set_message(t('Detailed description of costs for listing an offer: <pre>@costs</pre>', array('@costs' => $form_state['checked_item']->itemPriceDesc)));
+
+      watchdog('allegro_item', 'Added Allegro item %title.', $t_args, WATCHDOG_NOTICE, l(t('view'), 'admin/allegro/item/' . $allegro_item->id));
+    }
+    else {
+      drupal_set_message(t('The auction %title has been updated.', $t_args));
+      watchdog('allegro_item', 'Updated Allegro item %title.', $t_args, WATCHDOG_NOTICE, l(t('view'), 'admin/allegro/item/' . $allegro_item->id));
+    }
 
     $form_state['redirect'] = allegro_item_url($allegro_item);
   }
