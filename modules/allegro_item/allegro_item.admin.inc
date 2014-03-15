@@ -269,12 +269,17 @@ function allegro_item_form($form, &$form_state, $allegro_item) {
   $form['offer']['auction_type'] = array(
     '#title' => t('Auction type'),
     '#type' => 'radios',
+    '#default_value' => 1,
     '#options' => array(
       1 => t('Only Buy Now! (no bidding)'),
       2 => t('Auction (bidding)'),
     ),
     '#required' => TRUE,
   );
+
+  if (!empty($sellformfields_converted[6]['#default_value'])) {
+    $form['offer']['auction_type']['#default_value'] = 2;
+  }
 
   // Quantity.
   $form['offer'][5] = array(
@@ -526,7 +531,6 @@ function allegro_item_gallery_remove_image($form, &$form_state) {
   $form_state['gallery_count']--;
   $form_state['rebuild'] = TRUE;
   return $form['gallery'];
-
 }
 
 /**
@@ -607,9 +611,15 @@ function allegro_item_form_validate($form, &$form_state) {
     }
     else {
       $fields = array_diff($fields, $form['sellformfields_data']['#value']);
+      // Unset start price and minimal price when auction type is "Buy now!".
+      if ($form_state['values']['auction_type'] == 1) {
+        $fields[6] = $fields[7] = 0;
+      }
+
       $allegro_item->fields_to_update = $fields;
       $form_state['sellformfields_prepared'] = allegro_field_prepare_multiple($fields);
       $form_state['checked_item'] = $allegro->changeItemFields($allegro_item->external_id, $form_state['sellformfields_prepared'], array(), TRUE);
+      $form_state['checked_item'] = $form_state['checked_item']->changedItem;
     }
   }
   catch (SoapFault $e) {
@@ -661,12 +671,26 @@ function allegro_item_form_submit($form, &$form_state) {
 
       drupal_set_message(t('Auction !auction-link (%item_id) created successfully.', array('!auction-link' => $item_link, '%item_id' => $allegro_item->external_id)));
 
-      drupal_set_message(t('Detailed description of costs for listing an offer: <pre>@costs</pre>', array('@costs' => $form_state['checked_item']->itemPriceDesc)));
+      $costs = array(
+        'title' => t('Detailed description of costs for listing an offer'),
+        'items' => explode(PHP_EOL, trim($form_state['checked_item']->itemPriceDesc)),
+      );
+      drupal_set_message(theme('item_list', $costs));
 
       watchdog('allegro_item', 'Added Allegro item %title.', $t_args, WATCHDOG_NOTICE, l(t('view'), 'admin/allegro/item/' . $allegro_item->id));
     }
     else {
       drupal_set_message(t('The auction %title has been updated.', $t_args));
+
+      $costs = array(
+        'title' => t('Additional costs for updating an offer'),
+        'items' => array(),
+      );
+
+      foreach ($form_state['checked_item']->itemSurcharge->item as $cost) {
+        $costs['items'][] = $cost->surchargeDescription . ': ' . $cost->surchargeAmount->amountValue . $cost->surchargeAmount->amountCurrencySign;
+      }
+      drupal_set_message(theme('item_list', $costs));
       watchdog('allegro_item', 'Updated Allegro item %title.', $t_args, WATCHDOG_NOTICE, l(t('view'), 'admin/allegro/item/' . $allegro_item->id));
     }
 
