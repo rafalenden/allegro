@@ -15,7 +15,7 @@ function allegro_item_schema() {
       ),
       'external_id' => array(
         'description' => 'The external identifier for a Allegro item.',
-        'type' => 'float',
+        'type' => 'int',
         'size' => 'big',
         'unsigned' => TRUE,
         'not null' => TRUE,

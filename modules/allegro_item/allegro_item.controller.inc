@@ -140,7 +140,7 @@ class AllegroItemController extends DrupalDefaultEntityController {
       $items_to_finish = array();
       $external_ids = array();
       foreach ($allegro_items as $allegro_item) {
-        $external_ids[(int) $allegro_item->external_id] = $allegro_item->id;
+        $external_ids[$allegro_item->external_id] = $allegro_item->id;
         $items_to_finish[] = array('finishItemId' => $allegro_item->external_id);
       }
 
