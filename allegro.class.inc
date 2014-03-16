@@ -316,9 +316,16 @@ class Allegro extends SoapClient {
    * @return array
    *   List of services keyed by country ID.
    */
-  public static function getCountries() {
+  public static function getSupportedWebsites() {
     return array(
-      1 => 'allegro.pl',
+      1   => 'allegro.pl',
+      22  => 'allegro.by',
+      34  => 'aukro.bg',
+      56  => 'aukro.cz',
+      107 => 'allegro.kz',
+      168 => 'molotok.ru',
+      181 => 'aukro.sk',
+      209 => 'aukro.ua',
       228 => 'testwebapi.pl',
     );
   }

@@ -37,7 +37,7 @@ function allegro_settings_form() {
     '#type' => 'select',
     '#title' => t('Auction site'),
     '#description' => t('Auction site to connect with.'),
-    '#options' => Allegro::getCountries(),
+    '#options' => Allegro::getSupportedWebsites(),
     '#default_value' => variable_get('allegro_country_code', 1),
     '#required' => TRUE,
   );

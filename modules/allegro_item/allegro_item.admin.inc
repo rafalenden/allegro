@@ -699,7 +699,7 @@ function allegro_item_form_submit($form, &$form_state) {
 function allegro_item_delete_confirm($form, &$form_state, $allegro_item) {
   // Always provide entity id in the same form key as in the entity edit form.
   $form['allegro_item_id'] = array('#type' => 'value', '#value' => $allegro_item->id);
-  $allegro_websites = Allegro::getCountries();
+  $allegro_websites = Allegro::getSupportedWebsites();
   $allegro_item_website = $allegro_websites[$allegro_item->country_code];
   return confirm_form($form,
     t('Are you sure you want to delete %title?', array('%title' => $allegro_item->title)),

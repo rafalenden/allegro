@@ -160,8 +160,8 @@ function allegro_item_url_external($item_id, $country_code = NULL) {
   if (empty($country_code)) {
     $country_code = variable_get('country_code', 1);
   }
-  $countries = Allegro::getCountries();
-  return 'http://' . $countries[$country_code] . '/show_item.php?item=' . $item_id;
+  $websites = Allegro::getSupportedWebsites();
+  return 'http://' . $websites[$country_code] . '/show_item.php?item=' . $item_id;
 }
 
 /**
