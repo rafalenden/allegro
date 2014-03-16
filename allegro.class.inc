@@ -204,20 +204,43 @@ class Allegro extends SoapClient {
   }
 
   /**
-   * This method allows for comprehensive offer editing both listed and planned to be listed.
+   * This method allows for comprehensive offer editing both listed and planned
+   * to be listed.
    *
-   * @see http://allegro.pl/webapi/documentation.php/show/id,1190
+   * In order to add elements to the offer or change them, you need to pass data
+   * of selected fields of the fieldsToModify structure.
+   * To remove elements you need to pass data of selected fields of the
+   * fieldsToRemove structure.
+   * A list of fields available in the offer can be loaded by using the
+   * doGetItemFields method.
+   * When bids appear majority of fields is blocked to changes (e.g. description).
+   * In such case you can add an additional description in the fid: 25.
+   * This method allows for editing the offer and simulating it – the previewOnly
+   * field sets the method's mechanics.
+   *
+   * @see http://allegro.pl/webapi/documentation.php/show/id,1190?lang=en
    *
    * @param int $itemId
    *   User's session identifier received using the doLogin(Enc) method.
    * @param array $fieldsToModify
-   *   Identifier of an offer to be changed. The offer may be ongoing or planned to be listed.
+   *   Identifier of an offer to be changed. The offer may be ongoing or planned
+   *   to be listed.
    * @param array $fieldsToRemove
-   *   Array of structures containing information on sale form fields that are to be changed or added.
+   *   Array of structures containing information on sale form fields that are
+   *   to be changed or added.
    * @param bool $previewOnly
    *   Array of field identifiers (fids) that are to be removed.
    *
-   * @return array
+   * @return object
+   *   Following properties are available:
+   *   - changedItem: Structure containing information about a changed offer.
+   *     - itemId: Offer identifier.
+   *     - itemFields: Array of structures containing information about values of fields.
+   *     - itemSurcharge: Array of structures of fees charged for a changed offer.
+   *       - surchargeDescription: Full description of a fee.
+   *       - surchargeAmount: Structure of fee amounts for a changed offer.
+   *         - amountValue: Fee amount.
+   *         - amountCurrencySign: Mark of a currency in which money is returned.
    */
   public function changeItemFields($itemId, $fieldsToModify = array(), $fieldsToRemove = array(), $previewOnly = FALSE) {
     $params = array(
@@ -229,6 +252,62 @@ class Allegro extends SoapClient {
     );
 
     return $this->doChangeItemFields($params);
+  }
+
+/**
+ * This method allows for closing the offer (both ongoing and scheduled for listing)
+ * of a logged-in user before scheduled time (with or without cancellation of bids).
+ *
+ * @see http://allegro.pl/webapi/documentation.php/show/id,1122?lang=en
+ *
+ * @param int $finishItemId
+ *   Offer identifier.
+ * @param bool $finishCancelAllBids
+ *   Information on whether bids are to be cancelled together with closing the offer
+ *   (TRUE - yes, FALSE - no; default value is FALSE; only bids placed in the
+ *   bidding process are cancelled).
+ * @param string $finishCancelReason
+ *   Reason for cancellation of bids. Required if finishCancelAllBids = TRUE.
+ *
+ * @return object
+ *   Following properties are available:
+ *   - finishValue: Operation result (1 - offer has been ended, 0 - offer has not been ended).
+ */
+  public function finishItem($finishItemId, $finishCancelAllBids = FALSE, $finishCancelReason = '') {
+    $params = array(
+      'sessionHandle' => $this->sid,
+      'finishItemId' => $finishItemId,
+      'finishCancelAllBids' => $finishCancelAllBids ? 1 : 0,
+      'finishCancelReason' => $finishCancelReason,
+    );
+
+    return $this->doFinishItems($params);
+  }
+
+/**
+ * This method allows for closing many offers (both ongoing and scheduled for listing)
+ * of a logged-in user before scheduled time (with or without cancellation of bids).
+ *
+ * @see http://allegro.pl/webapi/documentation.php/show/id,1069?lang=en
+ *
+ * @param array $finishItemsList
+ *   Arrays with structures containing information of offers to be closed (max. 25).
+ *
+ * @return object
+ *   Following properties are available:
+ *   - finishItemsSucceed: Array of identifiers of successfully ended offers.
+ *   - finishItemsFailed: Arrays of structures containing information on offers that fail to end.
+ *     - finishItemId: Offer identifier.
+ *     - finishErrorCode: Error code indicating a reason of the failure.
+ *     - finishErrorMessage: Error message describing a reason of the failure.
+ */
+  public function finishItems(array $finishItemsList) {
+    $params = array(
+      'sessionHandle' => $this->sid,
+      'finishItemsList' => $finishItemsList,
+    );
+
+    return $this->doFinishItems($params);
   }
 
   /**

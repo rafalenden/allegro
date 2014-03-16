@@ -482,15 +482,6 @@ function allegro_item_form($form, &$form_state, $allegro_item) {
     '#submit' => array('allegro_item_form_submit'),
   );
 
-  if (!empty($allegro_item->id)) {
-    $form['actions']['delete'] = array(
-      '#access' => user_access('delete allegro items'),
-      '#type' => 'submit',
-      '#value' => t('Delete'),
-      '#submit' => array('allegro_item_form_delete_submit'),
-    );
-  }
-
   $form['#validate'][] = 'allegro_item_form_validate';
 
   field_attach_form('allegro_item', $allegro_item, $form, $form_state);
@@ -703,21 +694,44 @@ function allegro_item_form_submit($form, &$form_state) {
 }
 
 /**
- * Form submit callback for deleting confirmation.
- *
- * @param array $form
- * @param array $form_state
+ * Form constructor for the Allegro item deletion confirmation form.
  */
-function allegro_item_form_delete_submit($form, &$form_state) {
-  $destination = array();
-  if (isset($_GET['destination'])) {
-    $destination = drupal_get_destination();
-    unset($_GET['destination']);
+function allegro_item_delete_confirm($form, &$form_state, $allegro_item) {
+  // Always provide entity id in the same form key as in the entity edit form.
+  $form['allegro_item_id'] = array('#type' => 'value', '#value' => $allegro_item->id);
+  $allegro_websites = Allegro::getCountries();
+  $allegro_item_website = $allegro_websites[$allegro_item->country_code];
+  return confirm_form($form,
+    t('Are you sure you want to delete %title?', array('%title' => $allegro_item->title)),
+    'admin/allegro/item/' . $allegro_item->id,
+    t('Deleting will also finish listing an auction at %website. This action cannot be undone.', array('%website' => $allegro_item_website)),
+    t('Delete'),
+    t('Cancel')
+  );
+}
+
+/**
+ * Executes Allegro item deletion.
+ *
+ * @see allegro_item_delete_confirm()
+ */
+function allegro_item_delete_confirm_submit($form, &$form_state) {
+  if ($form_state['values']['confirm']) {
+    $allegro_item = allegro_item_load($form_state['values']['allegro_item_id']);
+    $deleting_succedded = allegro_item_delete($form_state['values']['allegro_item_id']);
+
+    $t_args = array('%title' => $allegro_item->title);
+    if ($deleting_succedded) {
+      cache_clear_all();
+      watchdog('allegro_item', 'Deleted Allegro item %title.', $t_args);
+      drupal_set_message(t('Allegro item %title has been deleted.', $t_args));
+      $form_state['redirect'] = 'admin/allegro';
+    }
+    else {
+      watchdog('allegro_item', 'Error occured while deleting Allegro item %title.', $t_args);
+      drupal_set_message(t('Allegro item %title could not be deleted.', $t_args), 'error');
+    }
   }
-  $allegro_item = $form['#allegro_item'];
-  $form_state['redirect'] = array(
-    'allegro-item/' . $allegro_item->id . '/delete',
-    array('query' => $destination));
 }
 
 /**

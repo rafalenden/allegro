@@ -57,7 +57,7 @@ class AllegroItemController extends DrupalDefaultEntityController {
           throw new Exception(t('Unknown error occurred while validating item.'));
         }
 
-        $allegro_item->external_id = $verified_item->itemId;
+        $allegro_item->external_id = (int) $verified_item->itemId;
 
         // Save the new Allegro item.
         drupal_write_record('allegro_item', $allegro_item);
@@ -111,7 +111,6 @@ class AllegroItemController extends DrupalDefaultEntityController {
     catch (Exception $e) {
       $transaction->rollback();
       watchdog_exception('allegro_item', $e, $e->getMessage(), WATCHDOG_ERROR);
-      throw $e;
     }
   }
 
@@ -124,35 +123,85 @@ class AllegroItemController extends DrupalDefaultEntityController {
    * @return bool
    *   TRUE on success, FALSE otherwise.
    */
-  public function delete($ids) {
-    if (!empty($ids)) {
-      $transaction = db_transaction();
-      $allegro_items = $this->load($ids, array());
-      try {
-        db_delete('allegro_item')
-         ->condition('id', $ids, 'IN')
-         ->execute();
+  public function delete($ids, DatabaseTransaction $transaction = NULL) {
+    $allegro_items = $ids ? $this->load($ids) : FALSE;
+    if (!$allegro_items) {
+      // Do nothing, in case invalid or no ids have been passed.
+      return;
+    }
 
+    if (!isset($transaction)) {
+      $transaction = db_transaction();
+    }
+
+    try {
+      $allegro = allegro_client();
+
+      $items_to_finish = array();
+      $external_ids = array();
+      foreach ($allegro_items as $allegro_item) {
+        $external_ids[(int) $allegro_item->external_id] = $allegro_item->id;
+        $items_to_finish[] = array('finishItemId' => $allegro_item->external_id);
+      }
+
+      // Finish listing an offers.
+      $result = $allegro->finishItems($items_to_finish);
+
+      // Error occurred while finishing some auctions.
+      if (!empty($result->finishItemsFailed->item)) {
+        $failed_items = array();
+        foreach ($result->finishItemsFailed->item as $failed_item) {
+          $failed_allegro_item_id = $external_ids[$failed_item->finishItemId];
+          $failed_allegro_item = $allegro_items[$failed_allegro_item_id];
+
+          $failed_item_link = l($failed_allegro_item->title, allegro_item_url($failed_allegro_item));
+          $failed_items[] = $failed_item_link . ': ' . $failed_item->finishErrorMessage;
+
+          $ids_key_to_unset = array_search($failed_allegro_item_id, $ids);
+          unset($ids[$ids_key_to_unset]);
+        }
+
+        $failed_items_list = array(
+          'title' => t('Items that was not deleted'),
+          'items' => $failed_items,
+        );
+        drupal_set_message(theme('item_list', $failed_items_list), 'error');
+      }
+
+      if (!empty($result->finishItemsSucceed->item)) {
+        // Delete Allegro item entity.
+        db_delete('allegro_item')
+          ->condition('id', $ids, 'IN')
+          ->execute();
+
+        // Delete Allegro field data.
+        db_delete('allegro_field_data')
+          ->condition('item_id', $ids, 'IN')
+          ->execute();
+
+        // Delete Field API data.
         foreach ($allegro_items as $allegro_item) {
           field_attach_delete('allegro_item', $allegro_item);
         }
 
-        // Ignore slave server temporarily to give time for the
-        // saved Allegro item to be propagated to the slave.
+        // Ignore slave server temporarily.
         db_ignore_slave();
       }
-      catch (Exception $e) {
-        $transaction->rollback();
-        allegro_watchdog_exception('allegro_item', $e, NULL, WATCHDOG_ERROR);
-        return FALSE;
+      else {
+        throw new Exception(t('No items was deleted.'));
       }
-
-      module_invoke_all('entity_delete', $allegro_item, 'allegro_item');
-
-      // Clear the page and block and Allegro item caches.
-      cache_clear_all();
-      $this->resetCache();
     }
+    catch (Exception $e) {
+      $transaction->rollback();
+      watchdog_exception('allegro_item', $e, NULL, WATCHDOG_ERROR);
+      return FALSE;
+    }
+
+    module_invoke_all('entity_delete', $allegro_item, 'allegro_item');
+
+    // Clear the page and block and Allegro item caches.
+    cache_clear_all();
+    $this->resetCache();
 
     return TRUE;
   }
