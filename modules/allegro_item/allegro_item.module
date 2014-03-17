@@ -70,7 +70,8 @@ function allegro_item_menu() {
     'title' => 'Finish',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('allegro_item_finish_confirm', 3),
-    'access arguments' => array('finish allegro items'),
+    'access callback' => 'allegro_item_access',
+    'access arguments' => array('finish allegro items', 3),
     'type' => MENU_LOCAL_TASK,
     'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
     'file' => 'allegro_item.admin.inc',
@@ -80,7 +81,8 @@ function allegro_item_menu() {
     'title' => 'Delete',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('allegro_item_delete_confirm', 3),
-    'access arguments' => array('delete allegro items'),
+    'access callback' => 'allegro_item_access',
+    'access arguments' => array('delete allegro items', 3),
     'type' => MENU_LOCAL_TASK,
     'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
     'file' => 'allegro_item.admin.inc',
@@ -127,6 +129,23 @@ function allegro_item_entity_info() {
     ),
   );
   return $return;
+}
+
+/**
+ * Wrapper around user_access().
+ *
+ * @param string $permission
+ *   The permission, such as "administer nodes", being checked for.
+ * @param object $allegro_item
+ *   Allegro item entity object.
+ * @return bool
+ *  TRUE if the current user has the requested permission, FALSE otherwise.
+ */
+function allegro_item_access($permission, $allegro_item) {
+  if ($allegro_item->status == 1 && user_access($permission)) {
+    return TRUE;
+  }
+  return FALSE;
 }
 
 /**
