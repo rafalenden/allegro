@@ -321,6 +321,32 @@ function allegro_item_new($type = 'allegro_item') {
 }
 
 /**
+ * Finishes an Allegro item by ID.
+ *
+ * @param $id
+ *   The ID of the Allegro item to finish.
+ *
+ * @return bool
+ *   TRUE on success, FALSE otherwise.
+ */
+function allegro_item_finish($id) {
+  return entity_get_controller('allegro_item')->finish(array($id));
+}
+
+/**
+ * Finishes multiple Allegro items by ID.
+ *
+ * @param $ids
+ *   An array of Allegro item IDs to finish.
+ *
+ * @return bool
+ *   TRUE on success, FALSE otherwise.
+ */
+function allegro_item_finish_multiple($id) {
+  return entity_get_controller('allegro_item')->finish($ids);
+}
+
+/**
  * Deletes an Allegro item by ID.
  *
  * @param $id

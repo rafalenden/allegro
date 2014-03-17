@@ -694,6 +694,46 @@ function allegro_item_form_submit($form, &$form_state) {
 }
 
 /**
+ * Form constructor for the Allegro item finishing confirmation form.
+ */
+function allegro_item_finish_confirm($form, &$form_state, $allegro_item) {
+  $form['allegro_item_id'] = array('#type' => 'value', '#value' => $allegro_item->id);
+  $allegro_websites = Allegro::getSupportedWebsites();
+  $allegro_item_website = $allegro_websites[$allegro_item->country_code];
+  return confirm_form($form,
+    t('Are you sure you want to finish %title?', array('%title' => $allegro_item->title)),
+    'admin/allegro/item/' . $allegro_item->id,
+    t('This action cannot be undone.', array('%website' => $allegro_item_website)),
+    t('Finish auction'),
+    t('Cancel')
+  );
+}
+
+/**
+ * Executes Allegro item finishing.
+ *
+ * @see allegro_item_finish_confirm()
+ */
+function allegro_item_finish_confirm_submit($form, &$form_state) {
+  if ($form_state['values']['confirm']) {
+    $allegro_item = allegro_item_load($form_state['values']['allegro_item_id']);
+    $deleting_succedded = allegro_item_finish($form_state['values']['allegro_item_id']);
+
+    $t_args = array('%title' => $allegro_item->title);
+    if ($deleting_succedded) {
+      cache_clear_all();
+      watchdog('allegro_item', 'Finished Allegro item %title.', $t_args);
+      drupal_set_message(t('Allegro item %title has been finished.', $t_args));
+      $form_state['redirect'] = 'admin/allegro';
+    }
+    else {
+      watchdog('allegro_item', 'Error occured while finishing Allegro item %title.', $t_args);
+      drupal_set_message(t('Allegro item %title could not be finished.', $t_args), 'error');
+    }
+  }
+}
+
+/**
  * Form constructor for the Allegro item deletion confirmation form.
  */
 function allegro_item_delete_confirm($form, &$form_state, $allegro_item) {
