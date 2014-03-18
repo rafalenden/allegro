@@ -3,7 +3,7 @@
 /**
  * Controller for loading, creating, and saving Allegro items.
  */
-class AllegroItemController extends DrupalDefaultEntityController {
+class AllegroItemController extends EntityAPIController {
 
   /**
    * Save Allegro item.
@@ -281,20 +281,28 @@ class AllegroItemController extends DrupalDefaultEntityController {
   }
 
   /**
-   * Create a default Allegro item.
+   * Create a new entity.
    *
-   * @param string $type
-   *   The machine-readable type of the Allegro item.
-   *
-   * @return object
-   *   An Allegro item object with all default fields initialized.
+   * @param array $values
+   *   An array of values to set, keyed by property name.
+   * @return
+   *   A new instance of the entity type.
    */
-  public function create($type = 'allegro_item') {
-    return (object) array(
-      'id' => '',
-      'type' => $type,
+  public function create(array $values = array()) {
+    $values += array(
+      'id' => NULL,
+      'is_new' => TRUE,
+      'country_code' => NULL,
+      'external_id' => NULL,
+      'revision_id' => NULL,
       'title' => '',
+      'uid' => '',
+      'status' => 1,
+      'created' => '',
+      'changed' => '',
     );
+
+    return parent::create($values);
   }
 
 }

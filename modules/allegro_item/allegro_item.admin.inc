@@ -35,8 +35,8 @@ function allegro_item_list() {
 /**
  * Present an Allegro item submission form.
  */
-function allegro_item_add() {
-  $allegro_item = entity_get_controller('allegro_item')->create('allegro_item');
+function allegro_item_add_page() {
+  $allegro_item = allegro_item_new();
   drupal_set_title(t('Create Allegro item'), PASS_THROUGH);
   return drupal_get_form('allegro_item_form', $allegro_item);
 }
@@ -47,7 +47,7 @@ function allegro_item_add() {
  * @param object $allegro_item
  *   The Allegro item object to edit.
  */
-function allegro_item_page_edit($allegro_item) {
+function allegro_item_edit_page($allegro_item) {
   drupal_set_title(t('<em>Edit Allegro item</em> @title', array('@title' => $allegro_item->title)), PASS_THROUGH);
   return drupal_get_form('allegro_item_form', $allegro_item);
 }

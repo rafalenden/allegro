@@ -37,7 +37,7 @@ function allegro_item_menu() {
   // Allegro item.
   $items['admin/allegro/item/add'] = array(
     'title' => 'Add Allegro item',
-    'page callback' => 'allegro_item_add',
+    'page callback' => 'allegro_item_add_page',
     'access arguments' => array('create allegro items'),
     'file' => 'allegro_item.admin.inc',
     'type' => MENU_LOCAL_ACTION,
@@ -58,7 +58,7 @@ function allegro_item_menu() {
   );
   $items['admin/allegro/item/%allegro_item/edit'] = array(
     'title' => 'Edit',
-    'page callback' => 'allegro_item_page_edit',
+    'page callback' => 'allegro_item_edit_page',
     'page arguments' => array(3),
     'access arguments' => array('update allegro items'),
     'type' => MENU_LOCAL_TASK,
@@ -234,9 +234,11 @@ function allegro_item_permission() {
   );
 }
 
-/*
- * Unused.
+/**
  * Resizes images to pass Allegro validation.
+ *
+ * @deprecated This functionality will be replaced by image styles.
+ *
  */
 function allegro_item_resize_image($url) {
   $image = file_get_contents($url);
@@ -314,6 +316,16 @@ function allegro_item_load_by_external_id($external_id) {
 }
 
 /**
+ * Returns an initialized allegro item object.
+ *
+ * @return
+ *   A allegro item object with all default fields initialized.
+ */
+function allegro_item_new($values = array()) {
+  return entity_get_controller('allegro_item')->create($values);
+}
+
+/**
  * Save an Allegro item.
  *
  * @param $allegro_item
@@ -324,19 +336,6 @@ function allegro_item_load_by_external_id($external_id) {
  */
 function allegro_item_save($allegro_item) {
   return entity_get_controller('allegro_item')->save($allegro_item);
-}
-
-/**
- * Returns an initialized Allegro item object.
- *
- * @param $type
- *   The machine-readable type of the Allegro item.
- *
- * @return object
- *   An Allegro item object with all default fields initialized.
- */
-function allegro_item_new($type = 'allegro_item') {
-  return entity_get_controller('allegro_item')->create($type);
 }
 
 /**
