@@ -698,12 +698,10 @@ function allegro_item_form_submit($form, &$form_state) {
  */
 function allegro_item_finish_confirm($form, &$form_state, $allegro_item) {
   $form['allegro_item_id'] = array('#type' => 'value', '#value' => $allegro_item->id);
-  $allegro_websites = Allegro::getSupportedWebsites();
-  $allegro_item_website = $allegro_websites[$allegro_item->country_code];
   return confirm_form($form,
     t('Are you sure you want to finish %title?', array('%title' => $allegro_item->title)),
     'admin/allegro/item/' . $allegro_item->id,
-    t('This action cannot be undone.', array('%website' => $allegro_item_website)),
+    t('This action cannot be undone.'),
     t('Finish auction'),
     t('Cancel')
   );
@@ -770,6 +768,43 @@ function allegro_item_delete_confirm_submit($form, &$form_state) {
     else {
       watchdog('allegro_item', 'Error occured while deleting Allegro item %title.', $t_args);
       drupal_set_message(t('Allegro item %title could not be deleted.', $t_args), 'error');
+    }
+  }
+}
+
+/**
+ * Form constructor for the Allegro item selling again confirmation form.
+ */
+function allegro_item_sell_again_confirm($form, &$form_state, $allegro_item) {
+  $form['allegro_item_id'] = array('#type' => 'value', '#value' => $allegro_item->id);
+  return confirm_form($form,
+    t('Are you sure you want to sell again %title?', array('%title' => $allegro_item->title)),
+    'admin/allegro/item/' . $allegro_item->id,
+    t('This action cannot be undone.'),
+    t('Sell again'),
+    t('Cancel')
+  );
+}
+
+/**
+ * Executes selling again Allegro item.
+ *
+ * @see allegro_item_sell_again_confirm()
+ */
+function allegro_item_sell_again_confirm_submit($form, &$form_state) {
+  if ($form_state['values']['confirm']) {
+    $allegro_item = allegro_item_load($form_state['values']['allegro_item_id']);
+    $selling_again_succedded = allegro_item_sell_again($form_state['values']['allegro_item_id']);
+
+    $t_args = array('%title' => $allegro_item->title);
+    if ($selling_again_succedded) {
+      watchdog('allegro_item', 'Selling again Allegro item %title.', $t_args);
+      drupal_set_message(t('Allegro item %title has been listed again.', $t_args));
+      $form_state['redirect'] = 'admin/allegro';
+    }
+    else {
+      watchdog('allegro_item', 'Error occured while listing again Allegro item %title.', $t_args);
+      drupal_set_message(t('Allegro item %title could not be listed again.', $t_args), 'error');
     }
   }
 }

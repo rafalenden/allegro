@@ -88,6 +88,17 @@ function allegro_item_menu() {
     'file' => 'allegro_item.admin.inc',
     'weight' => 3,
   );
+  $items['admin/allegro/item/%allegro_item/sell-again'] = array(
+    'title' => 'Sell again',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('allegro_item_sell_again_confirm', 3),
+    'access callback' => 'allegro_item_access',
+    'access arguments' => array('sell again allegro items', 3),
+    'type' => MENU_LOCAL_TASK,
+    'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
+    'file' => 'allegro_item.admin.inc',
+    'weight' => 3,
+  );
 
   return $items;
 }
@@ -142,7 +153,10 @@ function allegro_item_entity_info() {
  *  TRUE if the current user has the requested permission, FALSE otherwise.
  */
 function allegro_item_access($permission, $allegro_item) {
-  if ($allegro_item->status == 1 && user_access($permission)) {
+  if ($permission == 'sell again allegro items' && $allegro_item->status == 0 && user_access($permission)) {
+    return TRUE;
+  }
+  elseif ($allegro_item->status == 1 && user_access($permission)) {
     return TRUE;
   }
   return FALSE;
@@ -295,7 +309,7 @@ function allegro_item_load_multiple($ids = array(), $conditions = array(), $rese
  * @param $id
  *   The Allegro item ID.
  * @param $reset
- *   Whether to reset the allegro_load_multiple() cache.
+ *   Whether to reset the allegro_item_load_multiple() cache.
  *
  * @return object
  *   A fully-populated Allegro item object.
@@ -388,4 +402,43 @@ function allegro_item_delete($id) {
  */
 function allegro_item_delete_multiple($ids) {
   return entity_get_controller('allegro_item')->delete($ids);
+}
+
+/**
+ * Sells again multiple Allegro items.
+ *
+ * @param $id
+ *   An array of Allegro item IDs to sell again.
+ */
+function allegro_item_sell_again_multiple(array $ids) {
+  $allegro_items = $ids ? allegro_item_load_multiple($ids) : FALSE;
+  if (!$allegro_items) {
+    // Do nothing, in case invalid or no ids have been passed.
+    return FALSE;
+  }
+
+  try {
+    $allegro = allegro_client();
+    $external_ids = array();
+    foreach ($allegro_items as $allegro_item) {
+      $external_ids[] = $allegro_item->external_id;
+    }
+
+    dpm($allegro->sellSomeAgain($external_ids, 0, 14, 3, $ids));
+    return TRUE;
+  }
+  catch (SoapFault $e) {
+    drupal_set_message($e->faultstring, 'error');
+    return FALSE;
+  }
+}
+
+/**
+ * Sells again Allegro item.
+ *
+ * @param int $id
+ *   The ID of the Allegro item to sell again.
+ */
+function allegro_item_sell_again($id) {
+  return allegro_item_sell_again_multiple(array($id));
 }
