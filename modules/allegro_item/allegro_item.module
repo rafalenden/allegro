@@ -109,6 +109,8 @@ function allegro_item_menu() {
 function allegro_item_entity_info() {
   $return['allegro_item'] = array(
     'label' => t('Allegro item'),
+    'plural label' => t('Allegro items'),
+    'module' => 'allegro_item',
     'controller class' => 'AllegroItemController',
     'base table' => 'allegro_item',
     'static cache' => TRUE,
@@ -441,4 +443,15 @@ function allegro_item_sell_again_multiple(array $ids) {
  */
 function allegro_item_sell_again($id) {
   return allegro_item_sell_again_multiple(array($id));
+}
+
+/**
+ * Returns the options list for the item status property.
+ */
+function allegro_item_status_options_list() {
+  return array(
+    0 => t('Not sold'),
+    1 => t('Selling'),
+    2 => t('Sold'),
+  );
 }
