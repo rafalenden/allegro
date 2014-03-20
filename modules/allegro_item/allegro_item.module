@@ -40,6 +40,7 @@ function allegro_item_menu() {
   $items['admin/allegro/item/%allegro_item/view'] = array(
     'title' => 'View',
     'type' => MENU_DEFAULT_LOCAL_TASK,
+    'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
     'weight' => -10,
   );
   $items['admin/allegro/item/%allegro_item/edit'] = array(
