@@ -6,33 +6,6 @@
  */
 
 /**
- * Menu callback; Displays a listing of Allegri items.
- *
- * @return string
- *   Items as HTML unordered list.
- */
-function allegro_item_list() {
-  $query = new EntityFieldQuery();
-
-  $entities = $query->entityCondition('entity_type', 'allegro_item')
-   ->propertyOrderBy('created', 'DESC')
-   ->pager(15)
-   ->execute();
-
-  if (empty($entities['allegro_item'])) {
-    return t('No Allegro items added.');
-  }
-
-  $allegro_items = allegro_item_load_multiple(array_keys($entities['allegro_item']));
-
-  foreach ($allegro_items as $allegro_item) {
-    $items[] = l($allegro_item->title, allegro_item_url($allegro_item));
-  }
-
-  return theme('item_list', array('items' => $items)) . theme('pager');
-}
-
-/**
  * Present an Allegro item submission form.
  */
 function allegro_item_add_page() {

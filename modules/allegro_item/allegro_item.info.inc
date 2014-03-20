@@ -29,7 +29,7 @@ function allegro_item_entity_property_info() {
     'schema field' => 'external_id',
   );
   $properties['country_code'] = array(
-    'label' => t('External ID'),
+    'label' => t('Country code'),
     'description' => t('Code of country where item is listed.'),
     'type' => 'integer',
     'setter callback' => 'entity_property_verbatim_set',

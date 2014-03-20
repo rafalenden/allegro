@@ -12,4 +12,8 @@ dependencies[] = allegro
 dependencies[] = allegro_category
 dependencies[] = allegro_field
 
+; Module includes
 files[] = allegro_item.controller.inc
+
+; Views handlers
+files[] = includes/views/handlers/allegro_item_handler_field_item_operations.inc

@@ -4,20 +4,6 @@
  * Implements hook_menu().
  */
 function allegro_item_menu() {
-  $items['admin/allegro'] = array(
-    'title' => 'Allegro',
-    'page callback' => 'allegro_item_list',
-    'access arguments' => array('administer allegro items'),
-    'file' => 'allegro_item.admin.inc',
-  );
-  $items['admin/allegro/items'] = array(
-    'title' => 'List',
-    'page callback' => 'allegro_item_list',
-    'access arguments' => array('administer allegro items'),
-    'file' => 'allegro_item.admin.inc',
-    'type' => MENU_DEFAULT_LOCAL_TASK,
-  );
-
   // Settings.
   $items['admin/allegro/settings'] = array(
     'title' => 'Settings',
@@ -453,5 +439,15 @@ function allegro_item_status_options_list() {
     0 => t('Not sold'),
     1 => t('Selling'),
     2 => t('Sold'),
+  );
+}
+
+/**
+ * Implements hook_views_api().
+ */
+function allegro_item_views_api() {
+  return array(
+    'api' => 3,
+    'path' => drupal_get_path('module', 'allegro_item') . '/includes/views',
   );
 }
