@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * aaaaaa.views_default.inc
+ * Views for the default Allegro administration page.
  */
 
 /**
@@ -39,7 +39,7 @@ function allegro_item_views_default_views() {
   $handler->display->display_options['empty']['area_text_custom']['table'] = 'views';
   $handler->display->display_options['empty']['area_text_custom']['field'] = 'area_text_custom';
   $handler->display->display_options['empty']['area_text_custom']['empty'] = TRUE;
-  $handler->display->display_options['empty']['area_text_custom']['content'] = 'No Allegro item available.';
+  $handler->display->display_options['empty']['area_text_custom']['content'] = 'No Allegro items available.';
   /* Field: Allegro item: Title */
   $handler->display->display_options['fields']['title']['id'] = 'title';
   $handler->display->display_options['fields']['title']['table'] = 'allegro_item';
@@ -89,7 +89,7 @@ function allegro_item_views_default_views() {
     2 => '2',
     1 => 0,
     3 => 0,
-    );
+  );
 
   /* Display: Admin page */
   $handler = $view->new_display('page', 'Admin page', 'admin_page');
