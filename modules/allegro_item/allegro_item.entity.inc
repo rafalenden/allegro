@@ -39,7 +39,7 @@ class AllegroItem extends Entity {
   }
 
   /**
-   * URL string
+   * URL string.
    */
   public function url() {
     $uri = $this->defaultUri();
@@ -47,32 +47,32 @@ class AllegroItem extends Entity {
   }
 
   /**
-   * Build the URL string
+   * Build the URL string.
    */
-  protected function buildURL($type) {
+  protected function buildUrl($type) {
     $url = $this->url();
     return $url . '/' . $type;
   }
 
   /**
-   * View URL
+   * View URL.
    */
-  public function viewURL() {
-    return $this->buildURL('view');
+  public function viewUrl() {
+    return $this->buildUrl('view');
   }
 
   /**
-   * Edit URL
+   * Edit URL.
    */
-  public function editURL() {
-    return $this->buildURL('edit');
+  public function editUrl() {
+    return $this->buildUrl('edit');
   }
 
   /**
-   * Delete URL
+   * Delete URL.
    */
-  public function deleteURL() {
-    return $this->buildURL('delete');
+  public function deleteUrl() {
+    return $this->buildUrl('delete');
   }
 
 }
