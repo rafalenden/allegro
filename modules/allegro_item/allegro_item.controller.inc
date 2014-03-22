@@ -151,7 +151,7 @@ class AllegroItemController extends EntityAPIController {
           $failed_allegro_item_id = $external_ids[$failed_item->finishItemId];
           $failed_allegro_item = $allegro_items[$failed_allegro_item_id];
 
-          $failed_item_link = l($failed_allegro_item->title, allegro_item_url($failed_allegro_item));
+          $failed_item_link = l($failed_allegro_item->title, $failed_allegro_item->url());
           $failed_items[] = $failed_item_link . ': ' . $failed_item->finishErrorMessage;
 
           $ids_key_to_unset = array_search($failed_allegro_item_id, $ids);
@@ -228,7 +228,7 @@ class AllegroItemController extends EntityAPIController {
           $failed_allegro_item_id = $external_ids[$failed_item->finishItemId];
           $failed_allegro_item = $allegro_items[$failed_allegro_item_id];
 
-          $failed_item_link = l($failed_allegro_item->title, allegro_item_url($failed_allegro_item));
+          $failed_item_link = l($failed_allegro_item->title, $failed_allegro_item->url());
           $failed_items[] = $failed_item_link . ': ' . $failed_item->finishErrorMessage;
 
           $ids_key_to_unset = array_search($failed_allegro_item_id, $ids);
