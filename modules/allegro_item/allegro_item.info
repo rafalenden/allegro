@@ -18,4 +18,6 @@ files[] = allegro_item.entity.inc
 files[] = allegro_item.controller.inc
 
 ; Views handlers
-files[] = views/handlers/allegro_item_handler_field_item_operations.inc
+files[] = views/handlers/allegro_item_handler_field.inc
+files[] = views/handlers/allegro_item_handler_field_external_id.inc
+files[] = views/handlers/allegro_item_handler_field_operations.inc

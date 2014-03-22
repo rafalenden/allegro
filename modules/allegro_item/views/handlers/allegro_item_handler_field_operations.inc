@@ -3,7 +3,7 @@
 /**
  * Field handler to present a product's operations links.
  */
-class allegro_item_handler_field_item_operations extends views_handler_field {
+class allegro_item_handler_field_operations extends views_handler_field {
   function construct() {
     parent::construct();
 

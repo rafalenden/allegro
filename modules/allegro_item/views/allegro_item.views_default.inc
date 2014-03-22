@@ -36,8 +36,8 @@ function allegro_item_views_default_views() {
   $handler->display->display_options['style_plugin'] = 'table';
   $handler->display->display_options['style_options']['columns'] = array(
     'title' => 'title',
-    'id_1' => 'id_1',
     'external_id' => 'external_id',
+    'name' => 'name',
     'created' => 'created',
     'changed' => 'changed',
     'operations' => 'operations',
@@ -51,14 +51,14 @@ function allegro_item_views_default_views() {
       'separator' => '',
       'empty_column' => 0,
     ),
-    'id_1' => array(
+    'external_id' => array(
       'sortable' => 1,
       'default_sort_order' => 'asc',
       'align' => '',
       'separator' => '',
       'empty_column' => 0,
     ),
-    'external_id' => array(
+    'name' => array(
       'sortable' => 1,
       'default_sort_order' => 'asc',
       'align' => '',
@@ -91,30 +91,39 @@ function allegro_item_views_default_views() {
   $handler->display->display_options['empty']['area_text_custom']['field'] = 'area_text_custom';
   $handler->display->display_options['empty']['area_text_custom']['empty'] = TRUE;
   $handler->display->display_options['empty']['area_text_custom']['content'] = 'No Allegro items available.';
+  /* Relationship: Allegro item: Creator ID */
+  $handler->display->display_options['relationships']['uid']['id'] = 'uid';
+  $handler->display->display_options['relationships']['uid']['table'] = 'allegro_item';
+  $handler->display->display_options['relationships']['uid']['field'] = 'uid';
   /* Field: Allegro item: Title */
   $handler->display->display_options['fields']['title']['id'] = 'title';
   $handler->display->display_options['fields']['title']['table'] = 'allegro_item';
   $handler->display->display_options['fields']['title']['field'] = 'title';
-  /* Field: Allegro item: Item ID */
-  $handler->display->display_options['fields']['id_1']['id'] = 'id_1';
-  $handler->display->display_options['fields']['id_1']['table'] = 'allegro_item';
-  $handler->display->display_options['fields']['id_1']['field'] = 'id';
-  $handler->display->display_options['fields']['id_1']['separator'] = '';
+  $handler->display->display_options['fields']['title']['link_to_item'] = 1;
   /* Field: Allegro item: External ID */
   $handler->display->display_options['fields']['external_id']['id'] = 'external_id';
   $handler->display->display_options['fields']['external_id']['table'] = 'allegro_item';
   $handler->display->display_options['fields']['external_id']['field'] = 'external_id';
   $handler->display->display_options['fields']['external_id']['separator'] = '';
+  $handler->display->display_options['fields']['external_id']['link_to_external_item'] = 1;
+  /* Field: User: Name */
+  $handler->display->display_options['fields']['name']['id'] = 'name';
+  $handler->display->display_options['fields']['name']['table'] = 'users';
+  $handler->display->display_options['fields']['name']['field'] = 'name';
+  $handler->display->display_options['fields']['name']['relationship'] = 'uid';
+  $handler->display->display_options['fields']['name']['label'] = 'Creator';
   /* Field: Allegro item: Date created */
   $handler->display->display_options['fields']['created']['id'] = 'created';
   $handler->display->display_options['fields']['created']['table'] = 'allegro_item';
   $handler->display->display_options['fields']['created']['field'] = 'created';
-  $handler->display->display_options['fields']['created']['date_format'] = 'long';
+  $handler->display->display_options['fields']['created']['label'] = 'Created';
+  $handler->display->display_options['fields']['created']['date_format'] = 'short';
   /* Field: Allegro item: Date updated */
   $handler->display->display_options['fields']['changed']['id'] = 'changed';
   $handler->display->display_options['fields']['changed']['table'] = 'allegro_item';
   $handler->display->display_options['fields']['changed']['field'] = 'changed';
-  $handler->display->display_options['fields']['changed']['date_format'] = 'long';
+  $handler->display->display_options['fields']['changed']['label'] = 'Changed';
+  $handler->display->display_options['fields']['changed']['date_format'] = 'short';
   /* Field: Allegro item: Operations links */
   $handler->display->display_options['fields']['operations']['id'] = 'operations';
   $handler->display->display_options['fields']['operations']['table'] = 'allegro_item';
