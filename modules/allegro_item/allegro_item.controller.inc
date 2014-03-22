@@ -281,28 +281,27 @@ class AllegroItemController extends EntityAPIController {
   }
 
   /**
-   * Create a new entity.
-   *
-   * @param array $values
-   *   An array of values to set, keyed by property name.
-   * @return
-   *   A new instance of the entity type.
+   * Pre-populating the built content.
    */
-  public function create(array $values = array()) {
-    $values += array(
-      'id' => NULL,
-      'is_new' => TRUE,
-      'country_code' => NULL,
-      'external_id' => NULL,
-      'revision_id' => NULL,
-      'title' => '',
-      'uid' => '',
-      'status' => 1,
-      'created' => '',
-      'changed' => '',
+  public function buildContent($allegro_item, $view_mode = 'full', $langcode = NULL, $content = array()) {
+    $content['item_id'] = array(
+      '#type' => 'item',
+      '#title' => t('Item number'),
+      '#markup' => $allegro_item->external_id,
+    );
+    $content['created'] = array(
+      '#type' => 'item',
+      '#title' => t('Created date'),
+      '#markup' => format_date($allegro_item->created),
+    );
+    $external_url = allegro_item_url_external($allegro_item->external_id, $allegro_item->country_code);
+    $content['external_url'] = array(
+      '#type' => 'item',
+      '#title' => t('External URL to Allegro item'),
+      '#markup' => l($external_url, $external_url),
     );
 
-    return parent::create($values);
+    return parent::buildContent($allegro_item, $view_mode, $langcode, $content);
   }
 
 }

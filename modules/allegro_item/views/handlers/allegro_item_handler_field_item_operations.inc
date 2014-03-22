@@ -37,7 +37,7 @@ class allegro_item_handler_field_item_operations extends views_handler_field {
     $item_id = $this->get_value($values, 'id');
 
     // Get the operations links.
-    $links = menu_contextual_links('allegro-item', 'admin/allegro/item', array($item_id));
+    $links = menu_contextual_links('allegro-item', 'allegro-item', array($item_id));
 
     if (!empty($links)) {
       // Add the destination to the links if specified.

@@ -280,7 +280,7 @@ class Allegro extends SoapClient {
       'itemId' => $itemId,
       'fieldsToModify' => $fieldsToModify,
       'fieldsToRemove' => $fieldsToRemove,
-      'previewOnly' => $previewOnly ? 1 : 0,
+      'previewOnly' => (int) $previewOnly,
     );
 
     return $this->doChangeItemFields($params);
@@ -309,7 +309,7 @@ class Allegro extends SoapClient {
     $params = array(
       'sessionHandle' => $this->sid,
       'finishItemId' => $finishItemId,
-      'finishCancelAllBids' => $finishCancelAllBids ? 1 : 0,
+      'finishCancelAllBids' => (int) $finishCancelAllBids,
       'finishCancelReason' => $finishCancelReason,
     );
 

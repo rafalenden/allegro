@@ -1,5 +1,9 @@
 <?php
 
+define('ALLEGRO_ITEM_STATUS_NOT_SOLD', 0);
+define('ALLEGRO_ITEM_STATUS_SELLING', 1);
+define('ALLEGRO_ITEM_STATUS_SOLD', 2);
+
 /**
  * Implements hook_menu().
  */
@@ -20,74 +24,92 @@ function allegro_item_menu() {
     'weight' => -10,
   );
 
-  // Allegro item.
-  $items['admin/allegro/item/add'] = array(
+  $items['allegro-item/add'] = array(
     'title' => 'Add Allegro item',
     'page callback' => 'allegro_item_add_page',
     'access arguments' => array('create allegro items'),
-    'file' => 'allegro_item.admin.inc',
+    'file' => 'allegro_item.pages.inc',
     'type' => MENU_LOCAL_ACTION,
   );
-  $items['admin/allegro/item/%allegro_item'] = array(
-    'title callback' => 'allegro_item_page_title',
-    'title arguments' => array(3),
-    'page callback' => 'allegro_item_view',
-    'page arguments' => array(3),
+
+  $items['allegro-item/%allegro_item'] = array(
+    'title' => 'Allegro item',
+    'page callback' => 'allegro_item_view_page',
+    'page arguments' => array(1),
     'access arguments' => array('view allegro items'),
-    'type' => MENU_CALLBACK,
-    'file' => 'allegro_item.admin.inc',
+    'file' => 'allegro_item.pages.inc',
   );
-  $items['admin/allegro/item/%allegro_item/view'] = array(
+
+  $items['allegro-item/%allegro_item/view'] = array(
     'title' => 'View',
     'type' => MENU_DEFAULT_LOCAL_TASK,
-    'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
     'weight' => -10,
   );
-  $items['admin/allegro/item/%allegro_item/edit'] = array(
+
+  $items['allegro-item/%allegro_item/edit'] = array(
     'title' => 'Edit',
     'page callback' => 'allegro_item_edit_page',
-    'page arguments' => array(3),
+    'page arguments' => array(1),
     'access arguments' => array('update allegro items'),
     'type' => MENU_LOCAL_TASK,
     'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
-    'file' => 'allegro_item.admin.inc',
+    'file' => 'allegro_item.pages.inc',
     'weight' => 1,
   );
-  $items['admin/allegro/item/%allegro_item/finish'] = array(
+
+  $items['allegro-item/%allegro_item/finish'] = array(
     'title' => 'Finish',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('allegro_item_finish_confirm', 3),
+    'page arguments' => array('allegro_item_finish_confirm', 1),
     'access callback' => 'allegro_item_access',
-    'access arguments' => array('finish allegro items', 3),
+    'access arguments' => array('finish allegro items', 1),
     'type' => MENU_LOCAL_TASK,
     'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
-    'file' => 'allegro_item.admin.inc',
+    'file' => 'allegro_item.pages.inc',
     'weight' => 2,
   );
-  $items['admin/allegro/item/%allegro_item/delete'] = array(
+
+  $items['allegro-item/%allegro_item/delete'] = array(
     'title' => 'Delete',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('allegro_item_delete_confirm', 3),
+    'page arguments' => array('allegro_item_delete_confirm', 1),
     'access callback' => 'allegro_item_access',
-    'access arguments' => array('delete allegro items', 3),
+    'access arguments' => array('delete allegro items', 1),
     'type' => MENU_LOCAL_TASK,
     'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
-    'file' => 'allegro_item.admin.inc',
+    'file' => 'allegro_item.pages.inc',
     'weight' => 3,
   );
-  $items['admin/allegro/item/%allegro_item/sell-again'] = array(
+
+  $items['allegro-item/%allegro_item/sell-again'] = array(
     'title' => 'Sell again',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('allegro_item_sell_again_confirm', 3),
+    'page arguments' => array('allegro_item_sell_again_confirm', 1),
     'access callback' => 'allegro_item_access',
-    'access arguments' => array('sell again allegro items', 3),
+    'access arguments' => array('sell again allegro items', 1),
     'type' => MENU_LOCAL_TASK,
     'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
-    'file' => 'allegro_item.admin.inc',
+    'file' => 'allegro_item.pages.inc',
     'weight' => 3,
   );
 
   return $items;
+}
+
+/**
+ * Implements hook_menu_local_tasks_alter().
+ */
+function allegro_item_menu_local_tasks_alter(&$data, $router_item, $root_path) {
+  // Add action link to 'allegro-item/add' on 'admin/allegro' page.
+  if ($root_path == 'admin/allegro') {
+    $item = menu_get_item('allegro-item/add');
+    if ($item['access']) {
+      $data['actions']['output'][] = array(
+        '#theme' => 'menu_local_action',
+        '#link' => $item,
+      );
+    }
+  }
 }
 
 /**
@@ -98,11 +120,13 @@ function allegro_item_entity_info() {
     'label' => t('Allegro item'),
     'plural label' => t('Allegro items'),
     'module' => 'allegro_item',
+    'entity class' => 'AllegroItem',
     'controller class' => 'AllegroItemController',
     'base table' => 'allegro_item',
     'static cache' => TRUE,
     'load_hook' => 'allegro_item_load',
-    'uri callback' => 'allegro_item_uri',
+    'uri callback' => 'entity_class_uri',
+    'access callback' => 'allegro_item_access',
     'fieldable' => FALSE,
     'entity keys' => array(
       'id' => 'id',
@@ -127,8 +151,43 @@ function allegro_item_entity_info() {
         'custom settings' => FALSE,
       ),
     ),
+    // Add support for title module.
+    'field replacement' => array(
+      'title' => array(
+        'field' => array(
+          'type' => 'text',
+          'cardinality' => 1,
+          'translatable' => TRUE,
+        ),
+        'instance' => array(
+          'label' => t('Title'),
+          'description' => t('The Title of the Allegro item.'),
+          'required' => FALSE,
+          'settings' => array(
+            'text_processing' => 0,
+          ),
+          'widget' => array(
+            'weight' => -5,
+          ),
+        ),
+      ),
+    ),
   );
   return $return;
+}
+
+/**
+ * Implements hook_admin_paths().
+ */
+function allegro_item_admin_paths() {
+  $paths = array(
+    'allegro-item/add' => TRUE,
+    'allegro-item/*/edit' => TRUE,
+    'allegro-item/*/delete' => TRUE,
+    'allegro-item/*/finish' => TRUE,
+    'allegro-item/*/sell-again' => TRUE,
+  );
+  return $paths;
 }
 
 /**
@@ -149,22 +208,6 @@ function allegro_item_access($permission, $allegro_item) {
     return TRUE;
   }
   return FALSE;
-}
-
-/**
- * Entity URI callback.
- */
-function allegro_item_uri($allegro_item) {
-  return array(
-    'path' => allegro_item_url($allegro_item),
-  );
-}
-
-/**
- * Entity internal URL.
- */
-function allegro_item_url($allegro_item) {
-  return 'admin/allegro/item/' . $allegro_item->id;
 }
 
 /**
@@ -269,8 +312,26 @@ function allegro_item_resize_image($url) {
  * @param object $allegro_item
  *   The Allegro item object.
  */
-function allegro_item_page_title($allegro_item) {
+function allegro_item_page_title(AllegroItem $allegro_item) {
   return $allegro_item->title;
+}
+
+/**
+ * Load an Allegro item object from the database.
+ *
+ * @param $id
+ *   The Allegro item ID.
+ * @param $reset
+ *   Whether to reset the allegro_item_load_multiple() cache.
+ *
+ * @return object
+ *   A fully-populated Allegro item object.
+ */
+function allegro_item_load($id = NULL, $reset = FALSE) {
+  $ids = (isset($id) ? array($id) : array());
+  $conditions = array();
+  $allegro_item = allegro_item_load_multiple($ids, $conditions, $reset);
+  return $allegro_item ? reset($allegro_item) : FALSE;
 }
 
 /**
@@ -293,24 +354,6 @@ function allegro_item_load_multiple($ids = array(), $conditions = array(), $rese
 }
 
 /**
- * Load an Allegro item object from the database.
- *
- * @param $id
- *   The Allegro item ID.
- * @param $reset
- *   Whether to reset the allegro_item_load_multiple() cache.
- *
- * @return object
- *   A fully-populated Allegro item object.
- */
-function allegro_item_load($id = NULL, $reset = FALSE) {
-  $ids = (isset($id) ? array($id) : array());
-  $conditions = array();
-  $allegro_item = allegro_item_load_multiple($ids, $conditions, $reset);
-  return $allegro_item ? reset($allegro_item) : FALSE;
-}
-
-/**
  * Load an Allegro item by external ID.
  */
 function allegro_item_load_by_external_id($external_id) {
@@ -319,13 +362,24 @@ function allegro_item_load_by_external_id($external_id) {
 }
 
 /**
+ * View the Allegro item.
+ */
+function allegro_item_view(AllegroItem $allegro_item, $view_mode = 'default', $langcode = NULL) {
+  if (!isset($langcode)) {
+    $langcode = $GLOBALS['language_content']->language;
+  }
+
+  return $allegro_item->view($view_mode, $langcode);
+}
+
+/**
  * Returns an initialized allegro item object.
  *
  * @return
  *   A allegro item object with all default fields initialized.
  */
-function allegro_item_new($values = array()) {
-  return entity_get_controller('allegro_item')->create($values);
+function allegro_item_create($values = array()) {
+  return entity_create('allegro_item', $values);
 }
 
 /**
@@ -337,8 +391,8 @@ function allegro_item_new($values = array()) {
  * @return object
  *   The saved Allegro item.
  */
-function allegro_item_save($allegro_item) {
-  return entity_get_controller('allegro_item')->save($allegro_item);
+function allegro_item_save(AllegroItem $allegro_item) {
+  return $allegro_item->save();
 }
 
 /**
@@ -437,9 +491,9 @@ function allegro_item_sell_again($id) {
  */
 function allegro_item_status_options_list() {
   return array(
-    0 => t('Not sold'),
-    1 => t('Selling'),
-    2 => t('Sold'),
+    ALLEGRO_ITEM_STATUS_NOT_SOLD => t('Not sold'),
+    ALLEGRO_ITEM_STATUS_SELLING => t('Selling'),
+    ALLEGRO_ITEM_STATUS_SOLD => t('Sold'),
   );
 }
 
@@ -449,6 +503,6 @@ function allegro_item_status_options_list() {
 function allegro_item_views_api() {
   return array(
     'api' => 3,
-    'path' => drupal_get_path('module', 'allegro_item') . '/includes/views',
+    'path' => drupal_get_path('module', 'allegro_item') . '/views',
   );
 }

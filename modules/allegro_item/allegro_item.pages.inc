@@ -2,15 +2,23 @@
 
 /**
  * @file
- * Allegro Item administration pages.
+ * Allegro Item pages.
  */
+
+/**
+ * Allegro item view page.
+ */
+function allegro_item_view_page(AllegroItem $allegro_item) {
+  drupal_set_title($allegro_item->label());
+  return allegro_item_view($allegro_item);
+}
 
 /**
  * Present an Allegro item submission form.
  */
 function allegro_item_add_page() {
-  $allegro_item = allegro_item_new();
-  drupal_set_title(t('Create Allegro item'), PASS_THROUGH);
+  $allegro_item = allegro_item_create();
+  drupal_set_title(t('Create Allegro item'));
   return drupal_get_form('allegro_item_form', $allegro_item);
 }
 
@@ -20,8 +28,8 @@ function allegro_item_add_page() {
  * @param object $allegro_item
  *   The Allegro item object to edit.
  */
-function allegro_item_edit_page($allegro_item) {
-  drupal_set_title(t('<em>Edit Allegro item</em> @title', array('@title' => $allegro_item->title)), PASS_THROUGH);
+function allegro_item_edit_page(AllegroItem $allegro_item) {
+  drupal_set_title(t('Edit Allegro item: %title', array('%title' => $allegro_item->label())), PASS_THROUGH);
   return drupal_get_form('allegro_item_form', $allegro_item);
 }
 
@@ -631,9 +639,9 @@ function allegro_item_form_submit($form, &$form_state) {
 
     if ($is_new) {
       $item_external_url = allegro_item_url_external($allegro_item->external_id, $allegro_item->country_code);
-      $item_link = l($allegro_item->title, $item_external_url);
+      $item_external_link = l($allegro_item->title, $item_external_url);
 
-      drupal_set_message(t('Auction !auction-link (%item_id) created successfully.', array('!auction-link' => $item_link, '%item_id' => $allegro_item->external_id)));
+      drupal_set_message(t('Auction !auction-link (%item_id) created successfully.', array('!auction-link' => $item_external_link, '%item_id' => $allegro_item->external_id)));
 
       $costs = array(
         'title' => t('Detailed description of costs for listing an offer'),
@@ -641,7 +649,7 @@ function allegro_item_form_submit($form, &$form_state) {
       );
       drupal_set_message(theme('item_list', $costs));
 
-      watchdog('allegro_item', 'Added Allegro item %title.', $t_args, WATCHDOG_NOTICE, l(t('view'), 'admin/allegro/item/' . $allegro_item->id));
+      watchdog('allegro_item', 'Added Allegro item %title.', $t_args, WATCHDOG_NOTICE, l(t('view'), $allegro_item->url()));
     }
     else {
       drupal_set_message(t('The auction %title has been updated.', $t_args));
@@ -655,10 +663,10 @@ function allegro_item_form_submit($form, &$form_state) {
         $costs['items'][] = $cost->surchargeDescription . ': ' . $cost->surchargeAmount->amountValue . $cost->surchargeAmount->amountCurrencySign;
       }
       drupal_set_message(theme('item_list', $costs));
-      watchdog('allegro_item', 'Updated Allegro item %title.', $t_args, WATCHDOG_NOTICE, l(t('view'), 'admin/allegro/item/' . $allegro_item->id));
+      watchdog('allegro_item', 'Updated Allegro item %title.', $t_args, WATCHDOG_NOTICE, l(t('view'), $allegro_item->url()));
     }
 
-    $form_state['redirect'] = allegro_item_url($allegro_item);
+    $form_state['redirect'] = $allegro_item->url();
   }
   catch (SoapFault $e) {
     form_set_error('', $e->faultstring);
@@ -673,7 +681,7 @@ function allegro_item_finish_confirm($form, &$form_state, $allegro_item) {
   $form['allegro_item_id'] = array('#type' => 'value', '#value' => $allegro_item->id);
   return confirm_form($form,
     t('Are you sure you want to finish %title?', array('%title' => $allegro_item->title)),
-    'admin/allegro/item/' . $allegro_item->id,
+    $allegro_item->url(),
     t('This action cannot be undone.'),
     t('Finish auction'),
     t('Cancel')
@@ -714,7 +722,7 @@ function allegro_item_delete_confirm($form, &$form_state, $allegro_item) {
   $allegro_item_website = $allegro_websites[$allegro_item->country_code];
   return confirm_form($form,
     t('Are you sure you want to delete %title?', array('%title' => $allegro_item->title)),
-    'admin/allegro/item/' . $allegro_item->id,
+    $allegro_item->url(),
     t('Deleting will also finish listing an auction at %website. This action cannot be undone.', array('%website' => $allegro_item_website)),
     t('Delete'),
     t('Cancel')
@@ -752,7 +760,7 @@ function allegro_item_sell_again_confirm($form, &$form_state, $allegro_item) {
   $form['allegro_item_id'] = array('#type' => 'value', '#value' => $allegro_item->id);
   return confirm_form($form,
     t('Are you sure you want to sell again %title?', array('%title' => $allegro_item->title)),
-    'admin/allegro/item/' . $allegro_item->id,
+    $allegro_item->url(),
     t('This action cannot be undone.'),
     t('Sell again'),
     t('Cancel')
@@ -780,46 +788,4 @@ function allegro_item_sell_again_confirm_submit($form, &$form_state) {
       drupal_set_message(t('Allegro item %title could not be listed again.', $t_args), 'error');
     }
   }
-}
-
-/**
- * Menu callback to display an Allegro item entity.
- *
- * @param object $allegro_item
- * @param string $view_mode
- *
- * @return string
- */
-function allegro_item_view($allegro_item, $view_mode = 'default') {
-  $entity_type = 'allegro_item';
-
-  $allegro_item->content = array(
-    '#view_mode' => $view_mode,
-  );
-
-  field_attach_prepare_view($entity_type, array($allegro_item->id => $allegro_item), $view_mode);
-  entity_prepare_view($entity_type, array($allegro_item->id => $allegro_item));
-  $allegro_item->content += field_attach_view($entity_type, $allegro_item, $view_mode);
-
-  $allegro_item->content['item_id'] = array(
-    '#type' => 'item',
-    '#title' => t('Item number'),
-    '#markup' => $allegro_item->external_id,
-  );
-  $allegro_item->content['created'] = array(
-    '#type' => 'item',
-    '#title' => t('Created date'),
-    '#markup' => format_date($allegro_item->created),
-  );
-  $external_url = allegro_item_url_external($allegro_item->external_id, $allegro_item->country_code);
-  $allegro_item->content['external_url'] = array(
-    '#type' => 'item',
-    '#title' => t('External URL to Allegro item'),
-    '#markup' => l($external_url, $external_url),
-  );
-
-  module_invoke_all('entity_view', $allegro_item, $entity_type, $view_mode, NULL);
-  drupal_alter(array('allegro_item_page_view', 'entity_view'), $allegro_item->content, $entity_type);
-
-  return $allegro_item->content;
 }
