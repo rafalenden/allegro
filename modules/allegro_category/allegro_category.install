@@ -35,7 +35,6 @@ function allegro_category_schema() {
         'type' => 'int',
       ),
     ),
-    'primary key' => array('country_code', 'cid'),
     'indexes' => array(
       'country_code' => array('country_code'),
       'cid' => array('cid'),
@@ -51,5 +50,4 @@ function allegro_category_schema() {
  */
 function allegro_category_uninstall() {
   variable_del('allegro_category_last_update');
-  db_delete('allegro_category')->execute();
 }

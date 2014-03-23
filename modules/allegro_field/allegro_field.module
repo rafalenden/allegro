@@ -488,6 +488,7 @@ function allegro_field_convert($allego_field) {
       $field['#type'] = 'select';
       $field['#size'] = 1;
       $field['#options'] = allegro_field_create_options($allego_field->opts_values, $allego_field->description);
+      $field['#element_validate'][] = 'allegro_field_combobox_validate';
       break;
     case ALLEGRO_FIELD_RADIOBUTTON:
       $field['#type'] = 'radios';
@@ -742,4 +743,10 @@ function allegro_field_download($offset, $package) {
     drupal_set_message($e->faultstring, 'error');
   }
   return $counter;
+}
+
+function allegro_field_combobox_validate($element, &$form_state) {
+  if (!empty($element['#required']) && $element['#value'] == 0) {
+    form_error($element, t('!name field is required.', array('!name' => $element['#title'])));
+  }
 }
