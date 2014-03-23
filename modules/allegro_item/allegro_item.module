@@ -92,6 +92,7 @@ function allegro_item_menu() {
     'weight' => 3,
   );
 
+  // Support for Devel.
   if (module_exists('devel')) {
     $devel_path = drupal_get_path('module', 'devel');
     $items['allegro-item/%allegro_item/devel'] = array(
@@ -119,7 +120,6 @@ function allegro_item_menu() {
       'weight' => 100,
     );
   }
-
 
   return $items;
 }
@@ -229,10 +229,10 @@ function allegro_item_admin_paths() {
  *  TRUE if the current user has the requested permission, FALSE otherwise.
  */
 function allegro_item_access($permission, $allegro_item) {
-  if ($permission == 'sell again allegro items' && $allegro_item->status == 0 && user_access($permission)) {
+  if ($permission == 'sell again allegro items' && $allegro_item->status == ALLEGRO_ITEM_STATUS_NOT_SOLD && user_access($permission)) {
     return TRUE;
   }
-  elseif ($allegro_item->status == 1 && user_access($permission)) {
+  elseif ($allegro_item->status == ALLEGRO_ITEM_STATUS_SELLING && user_access($permission)) {
     return TRUE;
   }
   return FALSE;
