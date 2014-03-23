@@ -209,11 +209,13 @@ class AllegroItemController extends EntityAPIController {
    *
    * @param array $ids
    *   An array of Allegro item IDs to delete.
+   * @param array $ids
+   *   Finish selling of items while deleting them.
    *
    * @return bool
    *   TRUE on success, FALSE otherwise.
    */
-  public function delete($ids, DatabaseTransaction $transaction = NULL) {
+  public function delete($ids, DatabaseTransaction $transaction = NULL, $finish_auctions = TRUE) {
     $allegro_items = $ids ? $this->load($ids) : FALSE;
     if (!$allegro_items) {
       // Do nothing, in case invalid or no ids have been passed.
@@ -225,40 +227,41 @@ class AllegroItemController extends EntityAPIController {
     }
 
     try {
-      $allegro = allegro_client();
+      if ($finish_auctions) {
+        $allegro = allegro_client();
 
-      $items_to_finish = array();
-      $external_ids = array();
-      foreach ($allegro_items as $allegro_item) {
-        $external_ids[$allegro_item->external_id] = $allegro_item->id;
-        $items_to_finish[] = array('finishItemId' => $allegro_item->external_id);
-      }
-
-      // Finish listing an offers.
-      $result = $allegro->finishItems($items_to_finish);
-
-      // Error occurred while finishing some auctions.
-      if (!empty($result->finishItemsFailed->item)) {
-        $failed_items = array();
-        foreach ($result->finishItemsFailed->item as $failed_item) {
-          $failed_allegro_item_id = $external_ids[$failed_item->finishItemId];
-          $failed_allegro_item = $allegro_items[$failed_allegro_item_id];
-
-          $failed_item_link = l($failed_allegro_item->title, $failed_allegro_item->url());
-          $failed_items[] = $failed_item_link . ': ' . $failed_item->finishErrorMessage;
-
-          $ids_key_to_unset = array_search($failed_allegro_item_id, $ids);
-          unset($ids[$ids_key_to_unset]);
+        $items_to_finish = array();
+        $external_ids = array();
+        foreach ($allegro_items as $allegro_item) {
+          $external_ids[$allegro_item->external_id] = $allegro_item->id;
+          $items_to_finish[] = array('finishItemId' => $allegro_item->external_id);
         }
+        // Finish listing an offers.
+        $result = $allegro->finishItems($items_to_finish);
 
-        $failed_items_list = array(
-          'title' => t('Items that was not deleted'),
-          'items' => $failed_items,
-        );
-        drupal_set_message(theme('item_list', $failed_items_list), 'error');
+        // Error occurred while finishing some auctions.
+        if (!empty($result->finishItemsFailed->item)) {
+          $failed_items = array();
+          foreach ($result->finishItemsFailed->item as $failed_item) {
+            $failed_allegro_item_id = $external_ids[$failed_item->finishItemId];
+            $failed_allegro_item = $allegro_items[$failed_allegro_item_id];
+
+            $failed_item_link = l($failed_allegro_item->title, $failed_allegro_item->url());
+            $failed_items[] = $failed_item_link . ': ' . $failed_item->finishErrorMessage;
+
+            $ids_key_to_unset = array_search($failed_allegro_item_id, $ids);
+            unset($ids[$ids_key_to_unset]);
+          }
+
+          $failed_items_list = array(
+            'title' => t('Items that was not deleted'),
+            'items' => $failed_items,
+          );
+          drupal_set_message(theme('item_list', $failed_items_list), 'error');
+        }
       }
 
-      if (!empty($result->finishItemsSucceed->item)) {
+      if (!$finish_auctions || !empty($result->finishItemsSucceed->item)) {
         // Delete Allegro item entity.
         db_delete('allegro_item')
           ->condition('id', $ids, 'IN')

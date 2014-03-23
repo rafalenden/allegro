@@ -426,25 +426,29 @@ function allegro_item_finish_multiple($id) {
  *
  * @param $id
  *   The ID of the Allegro item to delete.
+ * @param bool $finish_item
+ *   Finish selling of item while deleting it.
  *
  * @return bool
  *   TRUE on success, FALSE otherwise.
  */
-function allegro_item_delete($id) {
-  return entity_get_controller('allegro_item')->delete(array($id));
+function allegro_item_delete($id, $finish_item = TRUE) {
+  return entity_get_controller('allegro_item')->delete(array($id), NULL, $finish_item);
 }
 
 /**
  * Deletes multiple Allegro items by ID.
  *
- * @param $ids
+ * @param array $ids
  *   An array of Allegro item IDs to delete.
+ * @param bool $finish_items
+ *   Finish selling of items while deleting them.
  *
  * @return bool
  *   TRUE on success, FALSE otherwise.
  */
-function allegro_item_delete_multiple($ids) {
-  return entity_get_controller('allegro_item')->delete($ids);
+function allegro_item_delete_multiple($ids, $finish_items = TRUE) {
+  return entity_get_controller('allegro_item')->delete($ids, NULL, $finish_items);
 }
 
 /**

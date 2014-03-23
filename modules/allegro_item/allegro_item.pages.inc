@@ -717,14 +717,21 @@ function allegro_item_finish_confirm_submit($form, &$form_state) {
  * Form constructor for the Allegro item deletion confirmation form.
  */
 function allegro_item_delete_confirm($form, &$form_state, $allegro_item) {
-  // Always provide entity id in the same form key as in the entity edit form.
-  $form['allegro_item_id'] = array('#type' => 'value', '#value' => $allegro_item->id);
   $allegro_websites = Allegro::getSupportedWebsites();
   $allegro_item_website = $allegro_websites[$allegro_item->country_code];
+
+  // Always provide entity id in the same form key as in the entity edit form.
+  $form['allegro_item_id'] = array('#type' => 'value', '#value' => $allegro_item->id);
+  $form['finish_auction'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('End selling of this auction at %website.', array('%website' => $allegro_item_website)),
+    '#default_value' => TRUE,
+  );
+
   return confirm_form($form,
     t('Are you sure you want to delete %title?', array('%title' => $allegro_item->title)),
     $allegro_item->url(),
-    t('Deleting will also finish listing an auction at %website. This action cannot be undone.', array('%website' => $allegro_item_website)),
+    t('This action cannot be undone.'),
     t('Delete'),
     t('Cancel')
   );
@@ -738,7 +745,7 @@ function allegro_item_delete_confirm($form, &$form_state, $allegro_item) {
 function allegro_item_delete_confirm_submit($form, &$form_state) {
   if ($form_state['values']['confirm']) {
     $allegro_item = allegro_item_load($form_state['values']['allegro_item_id']);
-    $deleting_succedded = allegro_item_delete($form_state['values']['allegro_item_id']);
+    $deleting_succedded = allegro_item_delete($form_state['values']['allegro_item_id'], $form_state['values']['finish_auction']);
 
     $t_args = array('%title' => $allegro_item->title);
     if ($deleting_succedded) {
