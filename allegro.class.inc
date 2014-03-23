@@ -14,7 +14,6 @@ class Allegro extends SoapClient {
 
   public function __construct() {
     $options = array(
-      'cache_wsdl' => WSDL_CACHE_NONE,
       'connection_timeout' => 120,
       'features' => SOAP_SINGLE_ELEMENT_ARRAYS,
       'trace' => 1,

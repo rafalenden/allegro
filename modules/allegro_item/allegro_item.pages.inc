@@ -66,7 +66,7 @@ function allegro_item_form($form, &$form_state, $allegro_item) {
   $sellformfields_converted = allegro_field_convert_multiple($sellformfields);
 
   // Editing Allegro item.
-  if (!empty($allegro_item->id)) {
+  if (!$allegro_item->is_new) {
     $sellformfields_data = allegro_field_load_multiple_data($allegro_item->id);
     $form['sellformfields_data'] = array(
       '#type' => 'value',
@@ -162,6 +162,7 @@ function allegro_item_form($form, &$form_state, $allegro_item) {
       '#prefix' => '<div class="category-level">',
       '#suffix' => '</div>',
       '#default_value' => $current_cid,
+      '#limit_validation_errors' => array(),
       '#ajax' => array(
         'callback' => 'allegro_item_category_ajax_callback',
         'wrapper' => 'allegro-item-category-wrapper',
@@ -459,7 +460,7 @@ function allegro_item_form($form, &$form_state, $allegro_item) {
   );
   $form['actions']['submit'] = array(
     '#type' => 'submit',
-    '#value' => empty($allegro_item->id) ? t('Create auction') : t('Update auction'),
+    '#value' => $allegro_item->is_new ? t('Create auction') : t('Update auction'),
     '#submit' => array('allegro_item_form_submit'),
   );
 
@@ -520,7 +521,7 @@ function allegro_item_form_validate($form, &$form_state) {
   }
 
   $allegro_item = $form_state['allegro_item'];
-  $is_new = empty($allegro_item->id);
+  $allegro_item->is_new = $allegro_item->is_new;
   $values = &$form_state['values'];
   field_attach_form_validate('allegro_item', $allegro_item, $form, $form_state);
 
@@ -575,7 +576,7 @@ function allegro_item_form_validate($form, &$form_state) {
     $allegro = allegro_client();
     $form_state['sellformfields'] = $fields;
 
-    if ($is_new) {
+    if ($allegro_item->is_new) {
       // Start time.
       $fields[3] = REQUEST_TIME;
       $form_state['sellformfields_prepared'] = allegro_field_prepare_multiple($fields);
@@ -633,7 +634,7 @@ function allegro_item_form_submit($form, &$form_state) {
 
     field_attach_submit('allegro_item', $allegro_item, $form, $form_state);
 
-    $is_new = empty($allegro_item->id);
+    $is_new = $allegro_item->is_new;
     $allegro_item = allegro_item_save($allegro_item);
     $t_args = array('%title' => $allegro_item->title);
 

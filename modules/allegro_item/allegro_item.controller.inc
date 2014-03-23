@@ -6,6 +6,22 @@
 class AllegroItemController extends EntityAPIController {
 
   /**
+   * Load Allegro item.
+   * @param array $ids
+   *   IDs of Allegro items to load.
+   * @param array $conditions
+   *
+   * @return array
+   *   Array of AllegroItem objects.
+   */
+  public function load($ids = array(), $conditions = array()) {
+    $allegro_items = parent::load($ids, $conditions);
+    foreach ($allegro_items as &$allegro_item) {
+      $allegro_item->is_new = FALSE;
+    }
+    return $allegro_items;
+  }
+  /**
    * Save Allegro item.
    *
    * @param object $allegro_item

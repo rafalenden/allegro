@@ -17,13 +17,12 @@ class AllegroItem extends Entity {
   public $uid;
   public $created;
   public $changed;
-  public $is_new;
+  public $is_new = TRUE;
 
   /**
    * Create a default Allegro item.
    */
   public function __construct(array $values = array()) {
-    $this->is_new = TRUE;
     $this->status = ALLEGRO_ITEM_STATUS_SELLING;
     return parent::__construct($values, 'allegro_item');
   }
@@ -35,7 +34,7 @@ class AllegroItem extends Entity {
    * @return array
    */
   protected function defaultUri() {
-    return array('path' => 'allegro-item/' . strtolower($this->identifier()));
+    return array('path' => 'allegro-item/' . $this->identifier());
   }
 
   /**
