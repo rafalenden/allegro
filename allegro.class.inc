@@ -127,115 +127,6 @@ class Allegro extends SoapClient {
   }
 
   /**
-   * Metoda pozwala na pobranie pełnego drzewa kategorii dostępnych we wskazanym kraju.
-   * (http://allegro.pl/webapi/documentation.php/show/id,46)
-   *
-   * @return array
-   */
-  public function getCatsData() {
-    return $this->client->doGetCatsData($this->countryCode, 0, $this->webapiKey);
-  }
-
-  public function getCatsDataCount() {
-    $params = array(
-      'countryId' => $this->countryCode,
-      'localVersion' => 0,
-      'webapiKey' => $this->webapiKey,
-    );
-    return $this->client->doGetCatsDataCount($params);
-  }
-
-  public function getCatsDataLimit($offset = 0, $packageElement = 5000) {
-    $params = array(
-      'countryId' => $this->countryCode,
-      'localVersion' => 0,
-      'webapiKey' => $this->webapiKey,
-      'offset' => $offset,
-      'packageElement' => $packageElement,
-    );
-    return $this->client->doGetCatsDataLimit($params);
-  }
-
-  public function getSellFormFields() {
-    $params = array(
-      'countryCode' => $this->countryCode,
-      'localVersion' => 0,
-      'webapiKey' => $this->webapiKey,
-    );
-    return $this->client->doGetSellFormFieldsExt($params);
-  }
-
-  /**
-   * Get number of fields in country.
-   *
-   * @return int
-   *   Number of available fields in country.
-   */
-  public function getSellFormFieldsCount() {
-    $params = array(
-      'countryCode' => $this->countryCode,
-      'localVersion' => 0,
-      'webapiKey' => $this->webapiKey,
-      'offset' => 0,
-      'packageElement' => 1,
-    );
-    $response = $this->client->doGetSellFormFieldsExtLimit($params);
-    return $response->formFieldsCount;
-  }
-
-  public function getSellFormFieldsLimit($offset = 0, $packageElement = 50) {
-    $params = array(
-      'countryCode' => $this->countryCode,
-      'localVersion' => 0,
-      'webapiKey' => $this->webapiKey,
-      'offset' => $offset,
-      'packageElement' => $packageElement,
-    );
-    return $this->client->doGetSellFormFieldsExtLimit($params);
-  }
-
-  public function getVersion() {
-    $result = $this->queryAllSysStatus();
-    $versionKeys = array();
-    foreach ($result->sysCountryStatus->item as $status) {
-      $versionKeys[$status->countryId] = $status;
-    }
-    return $versionKeys[$this->countryCode]->verKey;
-  }
-
-  public function queryAllSysStatus() {
-    $params = array(
-      'countryId' => $this->countryCode,
-      'webapiKey' => $this->webapiKey,
-    );
-    return $this->client->doQueryAllSysStatus($params);
-  }
-
-  public function querySysStatus($sysvar = 3) {
-    $params = array(
-      'sysvar' => $sysvar,
-      'countryCode' => $this->countryCode,
-      'webapiKey' => $this->webapiKey,
-    );
-    return $this->client->doQuerySysStatus($params);
-  }
-
-  public function newAuction($fields, $localId = 0) {
-    $params = array(
-      'sessionHandle' => $this->sid,
-      'fields' => $fields,
-      // 'itemTemplateId' => 0,
-      'localId' => $localId,
-      // 'itemTemplateCreate' => array(
-        // 'itemTemplateOption' => 1,
-        // 'itemTemplateName' => 'Test',
-      // ),
-    );
-
-    return $this->client->doNewAuctionExt($params);
-  }
-
-  /**
    * This method allows for comprehensive offer editing both listed and planned
    * to be listed.
    *
@@ -343,6 +234,75 @@ class Allegro extends SoapClient {
   }
 
   /**
+   * Metoda pozwala na pobranie pełnego drzewa kategorii dostępnych we wskazanym kraju.
+   * (http://allegro.pl/webapi/documentation.php/show/id,46)
+   *
+   * @return array
+   */
+  public function getCatsData() {
+    return $this->client->doGetCatsData($this->countryCode, 0, $this->webapiKey);
+  }
+
+  public function getCatsDataCount() {
+    $params = array(
+      'countryId' => $this->countryCode,
+      'localVersion' => 0,
+      'webapiKey' => $this->webapiKey,
+    );
+    return $this->client->doGetCatsDataCount($params);
+  }
+
+  public function getCatsDataLimit($offset = 0, $packageElement = 5000) {
+    $params = array(
+      'countryId' => $this->countryCode,
+      'localVersion' => 0,
+      'webapiKey' => $this->webapiKey,
+      'offset' => $offset,
+      'packageElement' => $packageElement,
+    );
+    return $this->client->doGetCatsDataLimit($params);
+  }
+
+  public function getSellFormFields() {
+    $params = array(
+      'countryCode' => $this->countryCode,
+      'localVersion' => 0,
+      'webapiKey' => $this->webapiKey,
+    );
+    return $this->client->doGetSellFormFieldsExt($params);
+  }
+
+  /**
+   * Get number of fields in country.
+   *
+   * @return int
+   *   Number of available fields in country.
+   */
+  public function getSellFormFieldsCount() {
+    return $this->getSellFormFieldsLimit(0, 1)->formFieldsCount;
+  }
+
+  public function getSellFormFieldsLimit($offset = 0, $packageElement = 50) {
+    $params = array(
+      'countryCode' => $this->countryCode,
+      'localVersion' => 0,
+      'webapiKey' => $this->webapiKey,
+      'offset' => $offset,
+      'packageElement' => $packageElement,
+    );
+    return $this->client->doGetSellFormFieldsExtLimit($params);
+  }
+
+  public function getVersion() {
+    $result = $this->queryAllSysStatus();
+    $versionKeys = array();
+    foreach ($result->sysCountryStatus->item as $status) {
+      $versionKeys[$status->countryId] = $status;
+    }
+    return $versionKeys[$this->countryCode]->verKey;
+  }
+
+  /**
    * Log into WebAPI service.
    *
    * @return object
@@ -372,6 +332,38 @@ class Allegro extends SoapClient {
     $this->logged = TRUE;
 
     return $this;
+  }
+
+  public function newAuction($fields, $localId = 0) {
+    $params = array(
+      'sessionHandle' => $this->sid,
+      'fields' => $fields,
+      // 'itemTemplateId' => 0,
+      'localId' => $localId,
+      // 'itemTemplateCreate' => array(
+        // 'itemTemplateOption' => 1,
+        // 'itemTemplateName' => 'Test',
+      // ),
+    );
+
+    return $this->client->doNewAuctionExt($params);
+  }
+
+  public function queryAllSysStatus() {
+    $params = array(
+      'countryId' => $this->countryCode,
+      'webapiKey' => $this->webapiKey,
+    );
+    return $this->client->doQueryAllSysStatus($params);
+  }
+
+  public function querySysStatus($sysvar = 3) {
+    $params = array(
+      'sysvar' => $sysvar,
+      'countryCode' => $this->countryCode,
+      'webapiKey' => $this->webapiKey,
+    );
+    return $this->client->doQuerySysStatus($params);
   }
 
   /**
