@@ -19,8 +19,8 @@ function allegro_field_settings_form() {
     $message = t("Fields wasn't downloaded yet.");
   }
   else {
-    $total_categories = db_query('SELECT COUNT(*) FROM {allegro_field}')->fetchField();
-    $message = t('There is @count downloaded fields.', array('@count' => $total_categories));
+    $total_fields = db_query('SELECT COUNT(*) FROM {allegro_field} WHERE country_code = :country_code', array(':country_code' => variable_get('allegro_country_code')))->fetchField();
+    $message = t('There is @count downloaded fields.', array('@count' => $total_fields));
   }
 
   $form['update']['status'] = array(
@@ -53,8 +53,10 @@ function allegro_field_download_batch() {
       'file' => drupal_get_path('module', 'allegro_field') . '/allegro_field.admin.inc',
     );
 
+    $allegro = allegro_client();
+
     $limit = 1000;
-    $count = 20000;
+    $count = $allegro->getSellFormFieldsCount();
     $iterations = $count / $limit;
 
     allegro_field_delete_by_country(variable_get('allegro_country_code'));

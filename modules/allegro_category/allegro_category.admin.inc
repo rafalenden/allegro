@@ -19,7 +19,7 @@ function allegro_category_settings_form() {
     $message = t("Categories wasn't downloaded yet.");
   }
   else {
-    $total_categories = db_query('SELECT COUNT(*) FROM {allegro_category}')->fetchField();
+    $total_categories = db_query('SELECT COUNT(*) FROM {allegro_category} WHERE country_code = :country_code', array(':country_code' => variable_get('allegro_country_code')))->fetchField();
     $message = format_plural($total_categories, 'There is 1 downloaded category.', 'There is @count downloaded categories.');
   }
 
@@ -52,10 +52,8 @@ function allegro_category_download_batch() {
       'finished' => '_allegro_category_download_batch_finished',
       'file' => drupal_get_path('module', 'allegro_category') . '/allegro_category.admin.inc',
     );
+
     $allegro = allegro_client();
-    if (!is_object($allegro)) {
-      throw new Exception(t('Error occurred while connecting to Allegro WebAPI.'));
-    }
 
     $limit = 1000;
     $response = $allegro->getCatsDataCount();

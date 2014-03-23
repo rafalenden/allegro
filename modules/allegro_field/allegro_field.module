@@ -705,33 +705,35 @@ function allegro_field_download($offset, $package) {
     $allegro = allegro_client();
     $response = $allegro->getSellFormFieldsLimit($offset, $package);
     $counter = 0;
-    foreach ($response->sellFormFields->item as $i => $field) {
-      db_insert('allegro_field')
-       ->fields(array(
-         'country_code' => $allegro->countryCode,
-         'fid' => $field->sellFormId,
-         'title' => $field->sellFormTitle,
-         'cat' => $field->sellFormCat,
-         'type' => $field->sellFormType,
-         'res_type' => $field->sellFormResType,
-         'def_value' => $field->sellFormDefValue,
-         'opt' => $field->sellFormOpt,
-         'pos' => $field->sellFormPos,
-         'length' => $field->sellFormLength,
-         'min_value' => $field->sellMinValue,
-         'max_value' => $field->sellMaxValue,
-         'description' => $field->sellFormDesc,
-         'opts_values' => $field->sellFormOptsValues,
-         'field_desc' => $field->sellFormFieldDesc,
-         'param_id' => $field->sellFormParamId,
-         'param_values' => $field->sellFormParamValues,
-         'parent_id' => $field->sellFormParentId,
-         'parent_value' => $field->sellFormParentValue,
-         'unit' => $field->sellFormUnit,
-         'options' => $field->sellFormOptions,
-       ))
-       ->execute();
-      $counter++;
+    if (isset($response->sellFormFields->item)) {
+      foreach ($response->sellFormFields->item as $field) {
+        db_insert('allegro_field')
+         ->fields(array(
+           'country_code' => $allegro->countryCode,
+           'fid' => $field->sellFormId,
+           'title' => $field->sellFormTitle,
+           'cat' => $field->sellFormCat,
+           'type' => $field->sellFormType,
+           'res_type' => $field->sellFormResType,
+           'def_value' => $field->sellFormDefValue,
+           'opt' => $field->sellFormOpt,
+           'pos' => $field->sellFormPos,
+           'length' => $field->sellFormLength,
+           'min_value' => $field->sellMinValue,
+           'max_value' => $field->sellMaxValue,
+           'description' => $field->sellFormDesc,
+           'opts_values' => $field->sellFormOptsValues,
+           'field_desc' => $field->sellFormFieldDesc,
+           'param_id' => $field->sellFormParamId,
+           'param_values' => $field->sellFormParamValues,
+           'parent_id' => $field->sellFormParentId,
+           'parent_value' => $field->sellFormParentValue,
+           'unit' => $field->sellFormUnit,
+           'options' => $field->sellFormOptions,
+         ))
+         ->execute();
+        $counter++;
+      }
     }
 
     variable_set('allegro_field_ver_key', $response->verKey);
