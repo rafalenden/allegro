@@ -46,6 +46,15 @@ class AllegroItem extends Entity {
   }
 
   /**
+   * External URL string.
+   */
+  public function externalUrl() {
+    if (!empty($this->external_id)) {
+      return allegro_item_url_external($this->external_id, $this->country_code);
+    }
+  }
+
+  /**
    * Build the URL string.
    */
   protected function buildUrl($type) {

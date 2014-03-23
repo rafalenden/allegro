@@ -639,8 +639,7 @@ function allegro_item_form_submit($form, &$form_state) {
     $t_args = array('%title' => $allegro_item->title);
 
     if ($is_new) {
-      $item_external_url = allegro_item_url_external($allegro_item->external_id, $allegro_item->country_code);
-      $item_external_link = l($allegro_item->title, $item_external_url);
+      $item_external_link = l($allegro_item->title, $allegro_item->externalURL());
 
       drupal_set_message(t('Auction !auction-link (%item_id) created successfully.', array('!auction-link' => $item_external_link, '%item_id' => $allegro_item->external_id)));
 
@@ -724,7 +723,7 @@ function allegro_item_delete_confirm($form, &$form_state, $allegro_item) {
   $form['allegro_item_id'] = array('#type' => 'value', '#value' => $allegro_item->id);
   $form['finish_auction'] = array(
     '#type' => 'checkbox',
-    '#title' => t('End selling of this auction at %website.', array('%website' => $allegro_item_website)),
+    '#title' => t('End selling of this auction at %website', array('%website' => $allegro_item_website)),
     '#default_value' => TRUE,
   );
 

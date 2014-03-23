@@ -313,11 +313,10 @@ class AllegroItemController extends EntityAPIController {
       '#title' => t('Created date'),
       '#markup' => format_date($allegro_item->created),
     );
-    $external_url = allegro_item_url_external($allegro_item->external_id, $allegro_item->country_code);
     $content['external_url'] = array(
       '#type' => 'item',
       '#title' => t('External URL to Allegro item'),
-      '#markup' => l($external_url, $external_url),
+      '#markup' => l($allegro_item->externalURL(), $allegro_item->externalURL()),
     );
 
     return parent::buildContent($allegro_item, $view_mode, $langcode, $content);

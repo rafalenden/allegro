@@ -39,7 +39,6 @@ function allegro_item_menu() {
     'access arguments' => array('view allegro items'),
     'file' => 'allegro_item.pages.inc',
   );
-
   $items['allegro-item/%allegro_item/view'] = array(
     'title' => 'View',
     'type' => MENU_DEFAULT_LOCAL_TASK,
@@ -92,6 +91,35 @@ function allegro_item_menu() {
     'file' => 'allegro_item.pages.inc',
     'weight' => 3,
   );
+
+  if (module_exists('devel')) {
+    $devel_path = drupal_get_path('module', 'devel');
+    $items['allegro-item/%allegro_item/devel'] = array(
+      'title' => 'Devel',
+      'page callback' => 'devel_load_object',
+      'page arguments' => array('allegro_item', 1),
+      'access arguments' => array('administer allegro items'),
+      'type' => MENU_LOCAL_TASK,
+      'file' => 'devel.pages.inc',
+      'file path' => $devel_path,
+      'weight' => 100,
+    );
+    $items['allegro-item/%allegro_item/devel/load'] = array(
+      'title' => 'Load',
+      'type' => MENU_DEFAULT_LOCAL_TASK,
+    );
+    $items['allegro-item/%allegro_item/devel/render'] = array(
+      'title' => 'Render',
+      'page callback' => 'devel_render_object',
+      'page arguments' => array('allegro_item', 1),
+      'access arguments' => array('administer allegro items'),
+      'file' => 'devel.pages.inc',
+      'file path' => $devel_path,
+      'type' => MENU_LOCAL_TASK,
+      'weight' => 100,
+    );
+  }
+
 
   return $items;
 }
