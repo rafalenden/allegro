@@ -10,28 +10,55 @@
  */
 function allegro_field_settings_form() {
   $form = array();
-  $form['update'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Update data'),
+
+  $messages = array();
+
+  $total_fields = db_query('SELECT COUNT(*) FROM {allegro_field} WHERE country_code = :country_code', array(':country_code' => variable_get('allegro_country_code')))->fetchField();
+
+  // Make serverity constants accessible.
+  include_once DRUPAL_ROOT . '/includes/install.inc';
+
+  $sync_status_ok = variable_get('allegro_field_ver_key') <= variable_get('allegro_field_last_update');
+  $sync_up_to_date = $sync_status_ok ? TRUE : FALSE;
+
+  $requirements = array();
+  $requirements[] = array(
+    'title' => t('Downloaded fields'),
+    'value' => $total_fields,
+    'severity' => $total_fields > 0 ? REQUIREMENT_OK : REQUIREMENT_WARNING,
+  );
+  $requirements[] = array(
+    'title' => t('Viersion of field definitions'),
+    'value' => variable_get('allegro_field_ver_str')
+      ? variable_get('allegro_field_ver_str') : t('Unknown'),
+    'severity' => $sync_up_to_date && variable_get('allegro_field_ver_str')
+      ? REQUIREMENT_OK : REQUIREMENT_WARNING,
+  );
+  $requirements[] = array(
+    'title' => t('Last modification in fields tree'),
+    'value' => variable_get('allegro_field_ver_key')
+      ? format_date(variable_get('allegro_field_ver_key')) : t('Unknown'),
+    'severity' => $sync_up_to_date && variable_get('allegro_field_ver_key')
+      ? REQUIREMENT_OK : REQUIREMENT_WARNING,
+  );
+  $requirements[] = array(
+    'title' => t('Last synchronisation of fields'),
+    'value' => variable_get('allegro_field_last_update')
+      ? format_date(variable_get('allegro_field_last_update')) : t('Unknown'),
+    'severity' => $sync_up_to_date && variable_get('allegro_field_last_update')
+      ? REQUIREMENT_OK : REQUIREMENT_WARNING,
   );
 
-  if (!variable_get('allegro_field_last_update')) {
-    $message = t("Fields wasn't downloaded yet.");
-  }
-  else {
-    $total_fields = db_query('SELECT COUNT(*) FROM {allegro_field} WHERE country_code = :country_code', array(':country_code' => variable_get('allegro_country_code')))->fetchField();
-    $message = t('There is @count downloaded fields.', array('@count' => $total_fields));
-  }
-
-  $form['update']['status'] = array(
-    '#markup' => '<p>' . $message . '</p>',
+  $form['status'] = array(
+    '#markup' => theme('status_report', array('requirements' => $requirements)),
   );
 
-  $form['update']['download_fields'] = array(
+  $form['synchronise_fields'] = array(
     '#type' => 'submit',
-    '#value' => t('Update fields'),
+    '#value' => t('Synchronise fields'),
     '#submit' => array('allegro_field_download_batch'),
   );
+
   return $form;
 }
 

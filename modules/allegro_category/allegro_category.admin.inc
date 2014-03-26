@@ -9,29 +9,52 @@
  * Settings page.
  */
 function allegro_category_settings_form() {
-  $form = array();
-  $form['update'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Update data'),
+  $total_categories = db_query('SELECT COUNT(*) FROM {allegro_category} WHERE country_code = :country_code', array(':country_code' => variable_get('allegro_country_code')))->fetchField();
+
+  // Make serverity constants accessible.
+  include_once DRUPAL_ROOT . '/includes/install.inc';
+
+  $sync_status_ok = variable_get('allegro_field_ver_key') <= variable_get('allegro_field_last_update');
+  $sync_up_to_date = $sync_status_ok ? TRUE : FALSE;
+
+  $requirements = array();
+  $requirements[] = array(
+    'title' => t('Downloaded categories'),
+    'value' => $total_categories,
+    'severity' => $total_categories > 0 ? REQUIREMENT_OK : REQUIREMENT_WARNING,
+  );
+  $requirements[] = array(
+    'title' => t('Viersion of category definitions'),
+    'value' => variable_get('allegro_category_ver_str')
+      ? variable_get('allegro_category_ver_str') : t('Unknown'),
+    'severity' => $sync_up_to_date && variable_get('allegro_category_ver_str')
+      ? REQUIREMENT_OK : REQUIREMENT_WARNING,
+  );
+  $requirements[] = array(
+    'title' => t('Last modification in categories tree'),
+    'value' => variable_get('allegro_category_ver_key')
+      ? format_date(variable_get('allegro_category_ver_key')) : t('Unknown'),
+    'severity' => $sync_up_to_date && variable_get('allegro_category_ver_key')
+      ? REQUIREMENT_OK : REQUIREMENT_WARNING,
+  );
+  $requirements[] = array(
+    'title' => t('Last synchronisation of categories'),
+    'value' => variable_get('allegro_category_last_update')
+      ? format_date(variable_get('allegro_category_last_update')) : t('Unknown'),
+    'severity' => $sync_up_to_date && variable_get('allegro_category_last_update')
+      ? REQUIREMENT_OK : REQUIREMENT_WARNING,
   );
 
-  if (!variable_get('allegro_category_last_update')) {
-    $message = t("Categories wasn't downloaded yet.");
-  }
-  else {
-    $total_categories = db_query('SELECT COUNT(*) FROM {allegro_category} WHERE country_code = :country_code', array(':country_code' => variable_get('allegro_country_code')))->fetchField();
-    $message = format_plural($total_categories, 'There is 1 downloaded category.', 'There is @count downloaded categories.');
-  }
-
-  $form['update']['status'] = array(
-    '#markup' => '<p>' . $message . '</p>',
+  $form['status'] = array(
+    '#markup' => theme('status_report', array('requirements' => $requirements)),
   );
 
-  $form['update']['download_categories'] = array(
+  $form['synchronise_categories'] = array(
     '#type' => 'submit',
-    '#value' => t('Update categories'),
+    '#value' => t('Synchronise categories'),
     '#submit' => array('allegro_category_download_batch'),
   );
+
   return $form;
 }
 

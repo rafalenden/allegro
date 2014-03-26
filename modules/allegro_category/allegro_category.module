@@ -140,6 +140,9 @@ function allegro_category_download($offset, $package) {
        ->execute();
       $counter++;
     }
+
+    variable_set('allegro_category_ver_key', $response->verKey);
+    variable_set('allegro_category_ver_str', $response->verStr);
   }
   catch (SoapFault $e) {
     $transaction->rollback();

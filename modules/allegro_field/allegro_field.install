@@ -116,7 +116,7 @@ function allegro_field_schema() {
     'description' => 'Allegro item fields values.',
     'fields' => array(
       'item_id' => array(
-        'description' => 'Allegro item id',
+        'description' => 'Allegro item ID',
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
@@ -157,4 +157,6 @@ function allegro_field_schema() {
  */
 function allegro_field_uninstall() {
   variable_del('allegro_field_last_update');
+  variable_del('allegro_field_ver_key');
+  variable_del('allegro_field_ver_str');
 }
