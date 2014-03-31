@@ -1,28 +1,41 @@
 <?php
 
-class Allegro extends SoapClient {
+class Allegro {
 
   public $session;
   public $sid;
   public $version;
   public $userId;
+
   public $userLogin;
   public $userPassword;
-  public $countryCode = 1;
   public $webapiKey;
-  public $logged = FALSE;
+  public $countryCode = 1;
 
+  public $testMode = FALSE;
+  public $logged = FALSE;
   public $client;
+  public $serviceURL;
 
   public function __construct() {
+    return $this;
+  }
+
+  public function init() {
     $options = array(
       'connection_timeout' => 120,
       'features' => SOAP_SINGLE_ELEMENT_ARRAYS,
       'trace' => 1,
     );
-    $SSL = TRUE;
-    $this->serviceURL = ($SSL ? 'https' : 'http') . '://webapi.allegro.pl/service.php?wsdl';
-    $this->client = new parent($this->serviceURL, $options);
+
+    if (empty($this->serviceURL)) {
+      $this->serviceURL = $this->testMode
+        ? 'https://webapi.allegro.pl.webapisandbox.pl/service.php?wsdl'
+        : 'https://webapi.allegro.pl/service.php?wsdl';
+    }
+
+    $this->client = new SoapClient($this->serviceURL, $options);
+
     return $this;
   }
 
@@ -52,16 +65,19 @@ class Allegro extends SoapClient {
    *   Key to WebAPI.
    * @param string $countryCode
    *   Code of country to connect through WebAPI.
+   * @param bool $testMode
+   *   Use WebAPI sandbox instead of production enviroment.
    *
    * @return object
    *   Allegro client object.
    */
-  public static function testConnection($login, $password, $apiKey, $countryCode) {
+  public static function testConnection($login, $password, $apiKey, $countryCode, $testMode = FALSE) {
     $test = new Allegro();
     $test->userLogin = $login;
     $test->userPassword = $password;
     $test->webapiKey = $apiKey;
     $test->countryCode = $countryCode;
+    $test->testMode = $testMode;
     $test->login();
     return TRUE;
   }
@@ -309,6 +325,7 @@ class Allegro extends SoapClient {
    *   Allegro client object.
    */
   public function login() {
+    $this->init();
     $this->version = $this->getVersion();
 
     $params = array(

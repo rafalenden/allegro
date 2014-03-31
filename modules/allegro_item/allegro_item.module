@@ -222,7 +222,7 @@ function allegro_item_admin_paths() {
  * Wrapper around user_access().
  *
  * @param string $permission
- *   The permission, such as "administer nodes", being checked for.
+ *   The permission, such as "administer allegro", being checked for.
  * @param object $allegro_item
  *   Allegro item entity object.
  * @return bool
@@ -251,9 +251,16 @@ function allegro_item_access($permission, $allegro_item) {
  */
 function allegro_item_url_external($item_id, $country_code = NULL) {
   if (empty($country_code)) {
-    $country_code = variable_get('country_code', 1);
+    $country_code = variable_get('allegro_country_code', 1);
   }
+
+  $test_mode = variable_get('allegro_test_mode', FALSE);
   $websites = Allegro::getSupportedWebsites();
+
+  if ($test_mode) {
+    return 'http://' . $websites[$country_code] . '.webapisandbox.pl/show_item.php?item=' . $item_id;
+  }
+
   return 'http://' . $websites[$country_code] . '/show_item.php?item=' . $item_id;
 }
 

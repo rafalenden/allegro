@@ -38,8 +38,8 @@ function allegro_item_entity_property_info() {
   );
   $properties['status'] = array(
     'label' => t('Status'),
-    'description' => t('Boolean indicating whether the item is active or disabled.'),
-    'type' => 'boolean',
+    'description' => t('Integer indicating whether the item is active or disabled.'),
+    'type' => 'integer',
     'options list' => 'allegro_item_status_options_list',
     'setter callback' => 'entity_property_verbatim_set',
     'setter permission' => 'administer allegro items',

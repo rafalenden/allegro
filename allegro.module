@@ -54,9 +54,13 @@ function allegro_client($login = TRUE, $reset = FALSE) {
       $allegro->userPassword = variable_get('allegro_password');
       $allegro->webapiKey = variable_get('allegro_webapikey');
       $allegro->countryCode = variable_get('allegro_country_code');
+      $allegro->testMode = variable_get('allegro_test_mode');
 
       if ($login) {
         $allegro->login();
+      }
+      else {
+        $allegro->init();
       }
     }
     catch (SoapFault $e) {
@@ -77,19 +81,21 @@ function allegro_client($login = TRUE, $reset = FALSE) {
 /**
  * Test connection to Allegro WebAPI service.
  *
- * @param  string $login
+ * @param string $login
  *   Service login.
- * @param  string $password
+ * @param string $password
  *   Service password.
- * @param  string $webapikey
+ * @param string $webapikey
  *   API key to service.
- * @param  int $countryCode
+ * @param int $countryCode
  *   Country code of targeted market.
+ * @param bool $testMode
+ *   Use WebAPI sandbox instead of production enviroment.
  *
  * @return bool
  *   TRUE when connection is successful, FALSE otherwise.
  */
-function allegro_test_connection($login = NULL, $password = NULL, $webapikey = NULL, $countryCode = NULL) {
+function allegro_test_connection($login = NULL, $password = NULL, $webapikey = NULL, $countryCode = NULL, $testMode = FALSE) {
   if (!$login) {
     $login = variable_get('allegro_login');
   }
@@ -102,13 +108,16 @@ function allegro_test_connection($login = NULL, $password = NULL, $webapikey = N
   if (!$countryCode) {
     $countryCode = variable_get('allegro_country_code');
   }
+  if (!$testMode) {
+    $testMode = variable_get('allegro_test_mode');
+  }
 
   if (!$login || !$password || !$webapikey || !$countryCode) {
     return FALSE;
   }
 
   try {
-    Allegro::testConnection($login, $password, $webapikey, $countryCode);
+    Allegro::testConnection($login, $password, $webapikey, $countryCode, $testMode);
     return TRUE;
   }
   catch (SoapFault $e) {

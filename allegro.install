@@ -34,4 +34,5 @@ function allegro_uninstall() {
   variable_del('allegro_password');
   variable_del('allegro_webapikey');
   variable_del('allegro_country_code');
+  variable_del('allegro_test_mode');
 }
