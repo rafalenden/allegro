@@ -13,7 +13,7 @@ class allegro_item_handler_field extends views_handler_field {
     parent::init($view, $options);
 
     if (!empty($this->options['link_to_item'])) {
-      $this->additional_fields['external_id'] = 'id';
+      $this->additional_fields['id'] = 'id';
     }
   }
 
