@@ -16,11 +16,43 @@ class AllegroItemController extends EntityAPIController {
    */
   public function load($ids = array(), $conditions = array()) {
     $allegro_items = parent::load($ids, $conditions);
+
+    $result = db_select('allegro_field_data', 'fd')
+      ->condition('fd.item_id', $ids, 'IN')
+      ->fields('fd', array('item_id', 'fid', 'value'))
+      ->orderBy('fd.fid')
+      ->execute()->fetchAll();
+
     foreach ($allegro_items as &$allegro_item) {
       $allegro_item->is_new = FALSE;
     }
+
     return $allegro_items;
   }
+
+  /**
+   * Attaches data to Allegro item entities upon loading.
+   *
+   * @param $allegro_items
+   *   Associative array of query results, keyed on the entity ID.
+   * @param $revision_id
+   *   ID of the revision that was loaded, or FALSE if the most current revision
+   *   was loaded.
+   */
+  protected function attachLoad(&$allegro_items, $revision_id = FALSE) {
+    $result = db_select('allegro_field_data', 'fd')
+      ->condition('fd.item_id', array_keys($allegro_items), 'IN')
+      ->fields('fd', array('item_id', 'fid', 'value'))
+      ->orderBy('fd.fid')
+      ->execute();
+
+    foreach ($result as $row) {
+      $allegro_items[$row->item_id]->field_data[$row->fid] = $row->value;
+    }
+
+    parent::attachLoad($allegro_items, $revision_id);
+  }
+
   /**
    * Save Allegro item.
    *

@@ -65,13 +65,12 @@ function allegro_client($login = TRUE, $reset = FALSE) {
     }
     catch (SoapFault $e) {
       if (module_exists('dblog') && user_access('access site reports')) {
-        drupal_set_message(t('An error occurred while connecting to WebAPI service. Check <a href="@watchdog-url">watchdog</a> for more informations.', array('@watchdog-url' => url('admin/reports/dblog'))), 'error');
+        drupal_set_message(t('An error occurred while connecting to WebAPI service. Check <a href="@watchdog-url">watchdog</a> for more information.', array('@watchdog-url' => url('admin/reports/dblog'))), 'error');
       }
       else {
-        drupal_set_message(t('An error occurred while connecting to WebAPI service. Check logs for more informations.'), 'error');
+        drupal_set_message(t('An error occurred while connecting to WebAPI service. Check logs for more information.'), 'error');
       }
-      watchdog_exception('allegro', $e);
-      unset($allegro);
+      throw $e;
     }
   }
 

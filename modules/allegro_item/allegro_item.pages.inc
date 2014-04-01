@@ -42,38 +42,30 @@ function allegro_item_edit_page(AllegroItem $allegro_item) {
  *   The Allegro item object to edit, which may be brand new.
  */
 function allegro_item_form($form, &$form_state, $allegro_item) {
-  if (!variable_get('allegro_field_last_update')) {
-    drupal_set_message(t('Field information is not downloaded from Allegro. <a href="@fields-url">Download field information</a>.', array('@fields-url' => url('admin/allegro/settings/fields'))), 'error');
-  }
-  if (!variable_get('allegro_category_last_update')) {
-    drupal_set_message(t('Categories are not downloaded from Allegro. <a href="@fields-url">Download categories</a>.', array('@fields-url' => url('admin/allegro/settings/categories'))), 'error');
-  }
+  // Definitions of fields or categories are not downloaded form WebAPI.
   if (!variable_get('allegro_field_last_update') || !variable_get('allegro_category_last_update')) {
+    if (!variable_get('allegro_field_last_update')) {
+      drupal_set_message(t('Field information is not downloaded from Allegro. <a href="@fields-url">Download field information</a>.', array('@fields-url' => url('admin/allegro/settings/fields'))), 'error');
+    }
+
+    if (!variable_get('allegro_category_last_update')) {
+      drupal_set_message(t('Categories are not downloaded from Allegro. <a href="@fields-url">Download categories</a>.', array('@fields-url' => url('admin/allegro/settings/categories'))), 'error');
+    }
+
     return array();
   }
 
-  $module_path = drupal_get_path('module', 'allegro_item');
-  $form['#attached']['css'][] =  $module_path . '/allegro_item.css';
-
-  // Set the id and identify this as an Allegro item edit form.
-  $form['#id'] = 'allegro-item-form';
+  $form['#attached']['css'][] = drupal_get_path('module', 'allegro_item') . '/allegro_item.css';
 
   // Save the Allegro item for later, in case we need it.
-  $form['#allegro_item'] = $allegro_item;
-  $form_state['allegro_item'] = $allegro_item;
+  $form_state['allegro_item'] =& $allegro_item;
 
   $sellformfields = allegro_field_load_multiple(allegro_get_fields());
   $sellformfields_converted = allegro_field_convert_multiple($sellformfields);
 
   // Editing Allegro item.
   if (!$allegro_item->is_new) {
-    $sellformfields_data = allegro_field_load_multiple_data($allegro_item->id);
-    $form['sellformfields_data'] = array(
-      '#type' => 'value',
-      '#value' => $sellformfields_data,
-    );
-
-    foreach ($sellformfields_data as $fid => $value) {
+    foreach ($allegro_item->field_data as $fid => $value) {
       if (isset($sellformfields_converted[$fid])) {
         if ($sellformfields_converted[$fid]['#type'] == 'checkboxes') {
           // @TODO: Add decoding data.
@@ -189,6 +181,7 @@ function allegro_item_form($form, &$form_state, $allegro_item) {
         '#description' => NULL,
         '#attributes' => array('class' => array('category-extra-field')),
         '#weight' => $sellformfield->pos,
+        '#default_value' => isset($allegro_item->field_data[$sellformfield->fid]) ? $allegro_item->field_data[$sellformfield->fid] : '',
       ) + allegro_field_convert($sellformfield);
     }
   }
@@ -470,18 +463,17 @@ function allegro_item_form($form, &$form_state, $allegro_item) {
   return $form;
 }
 
+/**
+ * Ajax callback for category and related fields.
+ */
 function allegro_item_category_ajax_callback($form, &$form_state) {
   $form_state['current_category'] = $form_state['triggering_element']['#value'];
   return $form['item']['category'];
 }
 
 /**
- * AJAX callback returning fields for selected category.
+ * Ajax callback for item images.
  */
-function allegro_item_category_fields_callback($form, &$form_state) {
-  return $form['item']['extra_fields'];
-}
-
 function allegro_item_gallery_callback($form, &$form_state) {
   return $form['gallery'];
 }
@@ -520,19 +512,20 @@ function allegro_item_form_validate($form, &$form_state) {
     return TRUE;
   }
 
-  $allegro_item = $form_state['allegro_item'];
-  $allegro_item->is_new = $allegro_item->is_new;
-  $values = &$form_state['values'];
+  $allegro_item =& $form_state['allegro_item'];
+  $values =& $form_state['values'];
   field_attach_form_validate('allegro_item', $allegro_item, $form, $form_state);
 
-  $extra_fields = isset($form['item']['extra_fields']) ? $form['item']['extra_fields'] : array();
+  $extra_fields = isset($form['item']['category']['extra_fields']) ? $form['item']['category']['extra_fields'] : array();
   $extra_values = array();
 
-  foreach ($extra_fields as $extra_field) {
+  foreach ($extra_fields as $key => $extra_field) {
     if (!isset($extra_field['#sellformfield']) || !is_object($extra_field['#sellformfield'])) {
       continue;
     }
     $field = $extra_field['#sellformfield'];
+    $form['sellformfields']['#value'][$key] = $field;
+    $fields[$key] = $extra_field['#value'];
     if ($field->opt == ALLEGRO_FIELD_REQUIRED && isset($values[$field->fid]) && in_array($field->type, array(4, 5, 6))) {
       $values[$field->fid] = $extra_values[$field->fid] = (array) $values[$field->fid];
       if (!in_array(TRUE, $values[$field->fid])) {
@@ -549,16 +542,20 @@ function allegro_item_form_validate($form, &$form_state) {
   }
 
   $fields = $extra_values;
+
   foreach ($values as $key => $value) {
     if (!empty($form['sellformfields']['#value'][$key])) {
       $sellformfield = $form['sellformfields']['#value'][$key];
 
-      if ($sellformfield->type == 6) {
-        $fields[$sellformfield->fid] = allegro_field_calculate_options($value);
-      }
-      elseif (is_array($value) && isset($value['value'])) {
+      // Filtered text.
+      if (is_array($value) && isset($value['value'])) {
         $fields[$sellformfield->fid] = $value['value'];
       }
+      // Field with options (select, checkboxes).
+      elseif (is_array($value)) {
+        $fields[$sellformfield->fid] = allegro_field_calculate_options($value);
+      }
+      // Single value field.
       elseif (is_string($value)) {
         $fields[$sellformfield->fid] = $value;
       }
@@ -583,7 +580,7 @@ function allegro_item_form_validate($form, &$form_state) {
       $form_state['checked_item'] = $allegro->checkNewAuction($form_state['sellformfields_prepared']);
     }
     else {
-      $fields = array_diff($fields, $form['sellformfields_data']['#value']);
+      $fields = array_diff($fields, $allegro_item->field_data);
       // Unset start price and minimal price when auction type is "Buy now!".
       if ($form_state['values']['auction_type'] == 1) {
         $fields[6] = $fields[7] = 0;
