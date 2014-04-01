@@ -55,7 +55,9 @@ function allegro_item_form($form, &$form_state, $allegro_item) {
     return array();
   }
 
-  $form['#attached']['css'][] = drupal_get_path('module', 'allegro_item') . '/allegro_item.css';
+  $path = drupal_get_path('module', 'allegro_item');
+  $form['#attached']['css'][] = $path . '/allegro_item.css';
+  $form['#attached']['js'][] = $path . '/allegro_item.js';
 
   // Save the Allegro item for later, in case we need it.
   $form_state['allegro_item'] =& $allegro_item;
