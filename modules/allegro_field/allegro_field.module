@@ -418,22 +418,39 @@ function allegro_field_calculate_options($options = array()) {
   return $sum;
 }
 
+function allegro_field_decalculate_options($options, $bitwise_value) {
+  $selected_options = array();
+  foreach ($options as $option) {
+    if ($bitwise_value & $option) {
+      $selected_options[] = $option;
+    }
+  }
+  return $selected_options;
+}
+
 /**
  * Converts Allegro field to Drupal Form API element.
  *
  * @param object $allego_field
  *   Allegro field object loaded from database.
+ * @param string $default_value
+ *   Default value for field.
  *
  * @return array
  *   Form API element.
  */
-function allegro_field_convert($allego_field) {
+function allegro_field_convert($allego_field, $default_value = NULL) {
   // http://allegro.pl/webapi/documentation.php/show/id,91
   // JEŚLI LISTA JEST SELECTEM POWINIENEM DODAĆ #validate PONIEWAŻ WOJEWÓDZTWO
   // NIE JEST SPRAWDZANE POD KONTEM OBLIGATORYJNOŚCI
   // Określenie typu pola w formularzu sprzedaży (1 - string, 2 - integer, 3 - float, 4 - combobox, 5 - radiobutton, 6 - checkbox, 7 - image (base64Binary), 8 - text (textarea), 9 - datetime (Unix time), 13 - date).
 
   $field = array();
+  $field['#sellformfield'] = $allego_field;
+
+  if ($default_value) {
+    $allego_field->def_value = $default_value;
+  }
 
   $field['#title'] = stripslashes($allego_field->title);
 
@@ -447,7 +464,6 @@ function allegro_field_convert($allego_field) {
     $field['#default_value'] = $allego_field->def_value;
   }
 
-  $field['#sellformfield'] = $allego_field;
   $field['#description'] = stripslashes($allego_field->field_desc);
   $field['#size'] = $allego_field->length;
   // $field['#weight'] = $allego_field->pos;
@@ -497,7 +513,7 @@ function allegro_field_convert($allego_field) {
     case ALLEGRO_FIELD_CHECKBOX:
       $field['#type'] = 'checkboxes';
       $field['#options'] = allegro_field_create_options($allego_field->opts_values, $allego_field->description);
-      $field['#default_value'] = array($field['#default_value']);
+      $field['#default_value'] = allegro_field_decalculate_options($field['#options'], $field['#default_value']);
       break;
     case ALLEGRO_FIELD_IMAGE:
       // Maximum file size is 200KB.

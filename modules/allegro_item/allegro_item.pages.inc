@@ -68,14 +68,8 @@ function allegro_item_form($form, &$form_state, $allegro_item) {
     foreach ($allegro_item->field_data as $fid => $value) {
       if (isset($sellformfields_converted[$fid])) {
         if ($sellformfields_converted[$fid]['#type'] == 'checkboxes') {
-          // @TODO: Add decoding data.
-          $values_decoded = array();
-          foreach (array_reverse($sellformfields_converted[$fid]['#options']) as $option_key => $option_value) {
-            if ($option_key & $value) {
-              $values_decoded[] = $option_value;
-            }
-          }
-          $value = $values_decoded;
+          $options = array_keys($sellformfields_converted[$fid]['#options']);
+          $value = allegro_field_decalculate_options($options, $value);
         }
         $sellformfields_converted[$fid]['#default_value'] = $value;
       }
@@ -177,12 +171,14 @@ function allegro_item_form($form, &$form_state, $allegro_item) {
     }
 
     foreach ($category_sellformfields as $sellformfield) {
+      $default_value = isset($allegro_item->field_data[$sellformfield->fid])
+        ? $allegro_item->field_data[$sellformfield->fid]
+        : NULL;
       $form['item']['category']['extra_fields'][$sellformfield->fid] = array(
         '#description' => NULL,
         '#attributes' => array('class' => array('category-extra-field')),
         '#weight' => $sellformfield->pos,
-        '#default_value' => isset($allegro_item->field_data[$sellformfield->fid]) ? $allegro_item->field_data[$sellformfield->fid] : '',
-      ) + allegro_field_convert($sellformfield);
+      ) + allegro_field_convert($sellformfield, $default_value);
     }
   }
 
