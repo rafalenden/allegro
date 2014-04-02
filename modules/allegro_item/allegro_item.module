@@ -545,3 +545,19 @@ function allegro_item_views_api() {
     'path' => drupal_get_path('module', 'allegro_item') . '/views',
   );
 }
+
+/**
+* Implements hook_registry_files_alter().
+*
+* Register Views handlers here instead of putting them each manually in info file.
+*/
+function allegro_item_registry_files_alter(&$files, $modules) {
+  $path = drupal_get_path('module', 'allegro_item');
+  $includes = file_scan_directory($path . '/views/handlers', '/\.inc$/');
+  foreach ($includes as $file) {
+    $files[$file->uri] = array(
+      'module' => 'allegro_item',
+      'weight' => 0,
+    );
+  }
+}
