@@ -74,8 +74,7 @@ function allegro_item_form($form, &$form_state, $allegro_item) {
     foreach ($allegro_item->field_data as $fid => $value) {
       if (isset($sellformfields_converted[$fid])) {
         if ($sellformfields_converted[$fid]['#type'] == 'checkboxes') {
-          $options = array_keys($sellformfields_converted[$fid]['#options']);
-          $value = allegro_field_decalculate_options($options, $value);
+          $value = allegro_field_decalculate_options($sellformfields_converted[$fid]['#options'], $value);
         }
         $sellformfields_converted[$fid]['#default_value'] = $value;
       }
@@ -175,6 +174,7 @@ function allegro_item_form($form, &$form_state, $allegro_item) {
       $default_value = isset($allegro_item->field_data[$sellformfield->fid])
         ? $allegro_item->field_data[$sellformfield->fid]
         : NULL;
+
       $form['item']['category']['extra_fields'][$sellformfield->fid] = array(
         '#description' => NULL,
         '#attributes' => array('class' => array('category-extra-field')),
@@ -523,9 +523,15 @@ function allegro_item_form_validate($form, &$form_state) {
     $field = $extra_field['#sellformfield'];
     $form_state['sellformfields'][$key] = $field;
     $fields[$key] = $extra_field['#value'];
-    if ($field->opt == ALLEGRO_FIELD_REQUIRED && isset($values[$field->fid]) && in_array($field->type, array(4, 5, 6))) {
+
+    if (isset($values[$field->fid])) {
       $values[$field->fid] = $extra_values[$field->fid] = (array) $values[$field->fid];
-      if (!in_array(TRUE, $values[$field->fid])) {
+
+      $has_options =  in_array($field->type, array(
+        ALLEGRO_FIELD_COMBOBOX, ALLEGRO_FIELD_RADIOBUTTON, ALLEGRO_FIELD_CHECKBOX
+      ));
+      // Check if required field with options is not empty.
+      if ($field->opt == ALLEGRO_FIELD_REQUIRED && $has_options && !in_array(TRUE, $values[$field->fid])) {
         form_set_error($field->fid, t('@field field is required.', array('@field' => $field->title)));
       }
     }
@@ -575,7 +581,7 @@ function allegro_item_form_validate($form, &$form_state) {
       $form_state['checked_item'] = $allegro->checkNewAuction($form_state['sellformfields_prepared']);
     }
     else {
-      $fields = array_diff($fields, $allegro_item->field_data);
+      $fields = array_diff_assoc($fields, $allegro_item->field_data);
       // Unset start price and minimal price when auction type is "Buy now!".
       if ($form_state['values']['auction_type'] == 1) {
         $fields[6] = $fields[7] = 0;

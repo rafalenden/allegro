@@ -421,9 +421,9 @@ function allegro_field_calculate_options($options = array()) {
 
 function allegro_field_decalculate_options($options, $bitwise_value) {
   $selected_options = array();
-  foreach ($options as $option) {
-    if ($bitwise_value & $option) {
-      $selected_options[] = $option;
+  foreach ($options as $key => $value) {
+    if ($bitwise_value & $key) {
+      $selected_options[] = $key;
     }
   }
   return $selected_options;
