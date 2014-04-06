@@ -66,7 +66,6 @@ function allegro_field_schema() {
         'type' => 'varchar',
         'length' => 255,
       ),
-      // Blob type is required.
       'opts_values' => array(
         'description' => 'Indication of specific values (relevant for descriptions mentioned above) which can be set for a particular field (it refers to such fields as combobox/radiobutton/checkbox; for checkbox fields, subsequent values can be summed up).',
         'type' => 'varchar',

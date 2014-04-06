@@ -272,14 +272,14 @@ function allegro_item_field_extra_fields() {
     'form' => array(
       'title' => array(
         'label' => t('Title'),
-        'description' => t('The name of the Allegro item.'),
+        'description' => t('The title of the Allegro item.'),
         'weight' => -5,
       ),
     ),
     'display' => array(
       'title' => array(
         'label' => t('Title'),
-        'description' => t('The name of the Allegro item.'),
+        'description' => t('The title of the Allegro item.'),
         'weight' => -5,
       ),
       'item_id' => array(

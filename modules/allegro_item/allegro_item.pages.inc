@@ -59,11 +59,15 @@ function allegro_item_form($form, &$form_state, $allegro_item) {
   $form['#attached']['css'][] = $path . '/allegro_item.css';
   $form['#attached']['js'][] = $path . '/allegro_item.js';
 
+  // Load and convert information about external fields.
+  $sellformfields = allegro_field_load_multiple(allegro_get_fields());
+  $sellformfields_converted = allegro_field_convert_multiple($sellformfields);
+
   // Save the Allegro item for later, in case we need it.
   $form_state['allegro_item'] =& $allegro_item;
 
-  $sellformfields = allegro_field_load_multiple(allegro_get_fields());
-  $sellformfields_converted = allegro_field_convert_multiple($sellformfields);
+  // Save information about external fields for later, in case we need it.
+  $form_state['sellformfields'] =& $sellformfields;
 
   // Editing Allegro item.
   if (!$allegro_item->is_new) {
@@ -92,11 +96,6 @@ function allegro_item_form($form, &$form_state, $allegro_item) {
     '#description' => NULL,
     '#default_value' => $allegro_item->title,
   ) + $sellformfields_converted[1];
-
-  $form['sellformfields'] = array(
-    '#type' => 'value',
-    '#value' => $sellformfields,
-  );
 
   // Get current category ID.
   if (isset($form_state['triggering_element']['#value']) && $form_state['triggering_element']['#type'] == 'select') {
@@ -522,7 +521,7 @@ function allegro_item_form_validate($form, &$form_state) {
       continue;
     }
     $field = $extra_field['#sellformfield'];
-    $form['sellformfields']['#value'][$key] = $field;
+    $form_state['sellformfields'][$key] = $field;
     $fields[$key] = $extra_field['#value'];
     if ($field->opt == ALLEGRO_FIELD_REQUIRED && isset($values[$field->fid]) && in_array($field->type, array(4, 5, 6))) {
       $values[$field->fid] = $extra_values[$field->fid] = (array) $values[$field->fid];
@@ -532,44 +531,42 @@ function allegro_item_form_validate($form, &$form_state) {
     }
   }
 
-  $category = $form_state['current_category'];
-
   $form_errors = form_get_errors();
   if (!empty($form_errors)) {
     return FALSE;
   }
 
   $fields = $extra_values;
+  $form_state['sellformfields_values'] =& $fields;
 
   foreach ($values as $key => $value) {
-    if (!empty($form['sellformfields']['#value'][$key])) {
-      $sellformfield = $form['sellformfields']['#value'][$key];
+    if (!empty($form_state['sellformfields'][$key])) {
+      $sellformfield = $form_state['sellformfields'][$key];
 
+      // Single value field.
+      if (is_scalar($value)) {
+        $fields[$sellformfield->fid] = $value;
+      }
       // Filtered text.
-      if (is_array($value) && isset($value['value'])) {
+      elseif (is_array($value) && isset($value['value'])) {
         $fields[$sellformfield->fid] = $value['value'];
       }
       // Field with options (select, checkboxes).
       elseif (is_array($value)) {
         $fields[$sellformfield->fid] = allegro_field_calculate_options($value);
       }
-      // Single value field.
-      elseif (is_string($value)) {
-        $fields[$sellformfield->fid] = $value;
-      }
     }
   }
 
   // Category.
-  $fields[2] = $category;
+  $fields[2] = $form_state['current_category'];
 
-  // Country.
+  // Add to request country from global settings.
   $fields[9] = variable_get('allegro_country_code');
 
   // Check if Allegro item fields are filled correctly.
   try {
     $allegro = allegro_client();
-    $form_state['sellformfields'] = $fields;
 
     if ($allegro_item->is_new) {
       // Start time.
@@ -624,7 +621,7 @@ function allegro_item_form_submit($form, &$form_state) {
 
     $allegro_item = &$form_state['allegro_item'];
     $allegro_item->title = $form_state['values'][1];
-    $allegro_item->sellformfields = $form_state['sellformfields'];
+    $allegro_item->sellformfields = $form_state['sellformfields_values'];
     $allegro_item->sellformfields_prepared = $form_state['sellformfields_prepared'];
 
     field_attach_submit('allegro_item', $allegro_item, $form, $form_state);
@@ -711,8 +708,7 @@ function allegro_item_finish_confirm_submit($form, &$form_state) {
  * Form constructor for the Allegro item deletion confirmation form.
  */
 function allegro_item_delete_confirm($form, &$form_state, $allegro_item) {
-  $allegro_websites = Allegro::getSupportedWebsites();
-  $allegro_item_website = $allegro_websites[$allegro_item->country_code];
+  $allegro_item_website = allegro_load_website_by_country_code($allegro_item->country_code);
 
   // Always provide entity id in the same form key as in the entity edit form.
   $form['allegro_item_id'] = array('#type' => 'value', '#value' => $allegro_item->id);

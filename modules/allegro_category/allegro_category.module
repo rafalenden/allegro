@@ -39,8 +39,8 @@ function allegro_category_load($cid) {
  */
 function allegro_category_load_multiple($cids) {
   $categories = db_select('allegro_category', 'c')
-    ->condition('c.parent', $cids, 'IN')
-    ->condition('c.country_code', variable_get('allegro_country_code', 1), '=')
+    ->condition('c.parent', $cids)
+    ->condition('c.country_code', variable_get('allegro_country_code', 1))
     ->fields('c', array('cid', 'name', 'parent', 'position', 'is_product_catalogue_enabled'))
     ->orderBy('c.position')
     ->execute()->fetchField();
@@ -60,7 +60,7 @@ function allegro_category_load_multiple($cids) {
  */
 function allegro_category_load_parent_id($cid) {
   $parent_id = db_select('allegro_category', 'c')
-    ->condition('c.cid', $cid, '=')
+    ->condition('c.cid', $cid)
     ->fields('c', array('parent'))
     ->execute()->fetchField();
   return $parent_id;
@@ -102,8 +102,8 @@ function allegro_category_load_children($parent_id = 0) {
     return array();
   }
   $categories = db_select('allegro_category', 'c')
-   ->condition('c.parent', $parent_id, '=')
-   ->condition('c.country_code', variable_get('allegro_country_code', 1), '=')
+   ->condition('c.parent', $parent_id)
+   ->condition('c.country_code', variable_get('allegro_country_code', 1))
    ->fields('c', array('cid', 'name', 'parent', 'position', 'is_product_catalogue_enabled'))
    ->orderBy('c.position')
    ->execute();
@@ -171,16 +171,18 @@ function allegro_category_delete_all() {
   db_delete('allegro_category')->execute();
 }
 
-/*
- * -----------------------------------------
- * Get category tree.
- * -----------------------------------------
+/**
+ * Get children for given category ID (parent ID).
+ *
+ * @param int $parent_id
+ *   ID of parent category for which children will be loaded
+ *
+ * @return array
+ *   Children for given category ID.
  */
-
-
-function allegro_category_hierarchy_select_children($parent) {
+function allegro_category_hierarchy_select_children($parent_id) {
   $children = array();
-  $categories = allegro_category_load_children($parent);
+  $categories = allegro_category_load_children($parent_id);
 
   foreach ($categories as $category) {
     $children[$category->cid] = $category->name;
@@ -189,16 +191,25 @@ function allegro_category_hierarchy_select_children($parent) {
   return $children;
 }
 
-function allegro_category_hierarchy_select_lineage($item) {
+/**
+ * Select lineage for given category ID.
+ *
+ * @param int $cid
+ *   ID of category for which lineage will be loaded.
+ *
+ * @return array
+ *   Lineage for given category ID.
+ */
+function allegro_category_hierarchy_select_lineage($cid) {
   $lineage = array();
   do {
-    $lineage[] = $item;
-    $item = db_select('allegro_category', 'c')
-      ->condition('c.cid', $item, '=')
+    $lineage[] = $cid;
+    $cid = db_select('allegro_category', 'c')
+      ->condition('c.cid', $cid)
       ->fields('c', array('parent'))
       ->execute()->fetchField();
   }
-  while ($item > 0);
+  while ($cid > 0);
 
   return array_reverse($lineage);
 }

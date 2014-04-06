@@ -140,3 +140,17 @@ function allegro_object2array($object) {
   }
   return array_map('allegro_object2array', $object);
 }
+
+/**
+ * Load website by country code.
+ *
+ * @param int $country_code
+ *   Load website with this country code.
+ *
+ * @return mixed
+ *  Website addres if found, FALSE otherwise.
+ */
+function allegro_load_website_by_country_code($country_code) {
+  $websites = Allegro::getSupportedWebsites();
+  return isset($websites[$country_code]) ? $websites[$country_code] : FALSE;
+}

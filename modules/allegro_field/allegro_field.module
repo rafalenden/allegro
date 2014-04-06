@@ -200,7 +200,8 @@ function allegro_get_fields() {
  *   A fully-populated field object, or FALSE if the field is not found.
  */
 function allegro_field_load($fid) {
-  return allegro_field_load_multiple((array) $fid);
+  $allegro_field = allegro_field_load_multiple((array) $fid);
+  return $allegro_field ? reset($allegro_field) : FALSE;
 }
 
 /**
@@ -218,7 +219,7 @@ function allegro_field_load_multiple($fids, $country_code = NULL) {
   }
 
   $result = db_select('allegro_field', 'f')
-   ->condition('f.fid', $fids, 'IN')
+   ->condition('f.fid', $fids)
    ->condition('f.country_code', $country_code)
    ->fields('f', array(
      'country_code', 'fid', 'title', 'cat', 'type', 'res_type', 'def_value', 'opt',
@@ -270,8 +271,8 @@ function allegro_field_load_multiple_data($item_id) {
  */
 function allegro_field_load_multiple_for_category($cid) {
   $result = db_select('allegro_field', 'f')
-   ->condition('f.cat', $cid, '=')
-   ->condition('f.country_code', variable_get('allegro_country_code', 1), '=')
+   ->condition('f.cat', $cid)
+   ->condition('f.country_code', variable_get('allegro_country_code', 1))
    ->fields('f', array(
      'country_code', 'fid', 'title', 'cat', 'type', 'res_type', 'def_value', 'opt',
      'pos', 'length', 'min_value', 'max_value', 'description', 'opts_values',
@@ -440,35 +441,26 @@ function allegro_field_decalculate_options($options, $bitwise_value) {
  *   Form API element.
  */
 function allegro_field_convert($allego_field, $default_value = NULL) {
-  // http://allegro.pl/webapi/documentation.php/show/id,91
-  // JEŚLI LISTA JEST SELECTEM POWINIENEM DODAĆ #validate PONIEWAŻ WOJEWÓDZTWO
-  // NIE JEST SPRAWDZANE POD KONTEM OBLIGATORYJNOŚCI
-  // Określenie typu pola w formularzu sprzedaży (1 - string, 2 - integer, 3 - float, 4 - combobox, 5 - radiobutton, 6 - checkbox, 7 - image (base64Binary), 8 - text (textarea), 9 - datetime (Unix time), 13 - date).
-
   $field = array();
   $field['#sellformfield'] = $allego_field;
+  $field['#title'] = stripslashes($allego_field->title);
+  $field['#description'] = stripslashes($allego_field->field_desc);
+  $field['#size'] = $allego_field->length;
 
+  // Set default value.
   if ($default_value) {
     $allego_field->def_value = $default_value;
   }
 
-  $field['#title'] = stripslashes($allego_field->title);
-
-  $fields_with_options = array(
+  // Field with options.
+  $has_options = in_array($allego_field->type, array(
     ALLEGRO_FIELD_COMBOBOX, ALLEGRO_FIELD_RADIOBUTTON, ALLEGRO_FIELD_CHECKBOX
-  );
-  if (in_array($allego_field->type, $fields_with_options)) {
-    $field['#default_value'] = $allego_field->def_value;
-  }
-  elseif ($allego_field->def_value != 0) {
+  ));
+  if ($has_options || $allego_field->def_value != 0) {
     $field['#default_value'] = $allego_field->def_value;
   }
 
-  $field['#description'] = stripslashes($allego_field->field_desc);
-  $field['#size'] = $allego_field->length;
-  // $field['#weight'] = $allego_field->pos;
-  // $field['#name'] = $allego_field->fid;
-
+  // Field is required.
   if ($allego_field->opt == ALLEGRO_FIELD_REQUIRED) {
     $field['#required'] = TRUE;
   }
@@ -479,42 +471,68 @@ function allegro_field_convert($allego_field, $default_value = NULL) {
     unset($field['#description']);
   }
 
+  // Add unit to field suffix.
   if (!empty($allego_field->unit)) {
     $field['#field_suffix'] = $allego_field->unit;
   }
 
+  // Field with options having only one value available to select.
   if ($allego_field->type == ALLEGRO_FIELD_CHECKBOX && $allego_field->options == 6) {
     $allego_field->type = ALLEGRO_FIELD_COMBOBOX;
   }
 
+  // Add validation to textfields with integer or float values.
+  $is_textfield = in_array($allego_field->type, array(
+    ALLEGRO_FIELD_STRING, ALLEGRO_FIELD_INTEGER, ALLEGRO_FIELD_FLOAT
+  ));
+  if ($is_textfield) {
+    if ($allego_field->res_type == ALLEGRO_FIELD_INTEGER) {
+      $field['#element_validate'][] = 'allegro_field_integer_validate';
+    }
+    elseif ($allego_field->res_type == ALLEGRO_FIELD_FLOAT) {
+      $field['#element_validate'][] = 'allegro_field_float_validate';
+    }
+  }
+
+  // Add attributes per field type.
   switch ($allego_field->type) {
     case ALLEGRO_FIELD_STRING:
       $field['#type'] = 'textfield';
       $field['#maxlength'] = $allego_field->length;
       break;
+
     case ALLEGRO_FIELD_INTEGER:
       $field['#type'] = 'textfield';
       $field['#maxlength'] = $allego_field->length;
       break;
+
     case ALLEGRO_FIELD_FLOAT:
       $field['#type'] = 'textfield';
       $field['#maxlength'] = $allego_field->length;
       break;
+
     case ALLEGRO_FIELD_COMBOBOX:
       $field['#type'] = 'select';
       $field['#size'] = 1;
       $field['#options'] = allegro_field_create_options($allego_field->opts_values, $allego_field->description);
       $field['#element_validate'][] = 'allegro_field_combobox_validate';
+      // Fix for buggy Allegro WebAPI.
+      if ($field['#default_value'] == 0 && !isset($field['#options'][0])) {
+        array_unshift($field['#options'], t('-- Select --'));
+      }
       break;
+
     case ALLEGRO_FIELD_RADIOBUTTON:
       $field['#type'] = 'radios';
       $field['#options'] = allegro_field_create_options($allego_field->opts_values, $allego_field->description);
       break;
+
     case ALLEGRO_FIELD_CHECKBOX:
       $field['#type'] = 'checkboxes';
       $field['#options'] = allegro_field_create_options($allego_field->opts_values, $allego_field->description);
       $field['#default_value'] = allegro_field_decalculate_options($field['#options'], $field['#default_value']);
       break;
+
     case ALLEGRO_FIELD_IMAGE:
       // Maximum file size is 200KB.
       $max_filesize_mb = 0.2;
@@ -525,13 +543,15 @@ function allegro_field_convert($allego_field, $default_value = NULL) {
        // 'file_validate_image_resolution' => array(100 * 100),
       );
       break;
+
     case ALLEGRO_FIELD_TEXT:
       $field['#type'] = 'textarea';
-      // $field['format']['format']['#access'] = FALSE;
       break;
+
     case ALLEGRO_FIELD_DATETIME:
       $field['#type'] = 'date';
       break;
+
     case ALLEGRO_FIELD_DATE:
       $field['#type'] = 'date';
       break;
@@ -543,6 +563,88 @@ function allegro_field_convert($allego_field, $default_value = NULL) {
 
   return $field;
 }
+
+/**
+ * Implements hook_element_info_alter().
+ */
+function allegro_field_element_info_alter(&$types) {
+  $supported_elements = array(
+    'textarea',
+    'textfield',
+    'checkboxes',
+    'select',
+    'radios',
+  );
+  foreach (array_keys($types) as $type) {
+    if (in_array($type, $supported_elements)) {
+      $types[$type]['#process'][] = 'allegro_field_process_element';
+    }
+  }
+}
+
+/**
+ * Element process callback.
+ *
+ * @param array $element
+ *   The render array element.
+ *
+ * @return array
+ *   The processed element.
+ */
+function allegro_field_process_element($element) {
+  if (isset($element['#allegro_fid'])) {
+    $element['#allegro_field_original'] = allegro_field_load($element['#allegro_fid']);
+    $element += allegro_field_convert($element['#allegro_field_original']);
+  }
+
+  return $element;
+}
+
+function allegro_field_combobox_validate($element, &$form_state) {
+  if (!empty($element['#required']) && $element['#value'] == 0) {
+    form_error($element, t('@name field is required.', array('@name' => $element['#title'])));
+  }
+}
+
+function allegro_field_integer_validate($element, &$form_state) {
+  $value = $element['#value'];
+  if (empty($value)) {
+    return;
+  }
+  if (!is_numeric($value) || intval($value) != $value) {
+    form_error($element, t('@name must be an integer.', array('@name' => $element['#title'])));
+  }
+  else {
+    allegro_field_minmax_validate($element, $form_state);
+  }
+}
+
+function allegro_field_float_validate($element, &$form_state) {
+  $value = $element['#value'];
+  if (empty($value)) {
+    return;
+  }
+  if (!is_numeric($value) || floatval($value) != $value) {
+    form_error($element, t('@name must be an float.', array('@name' => $element['#title'])));
+  }
+  else {
+    allegro_field_minmax_validate($element, $form_state);
+  }
+}
+
+function allegro_field_minmax_validate($element, &$form_state) {
+  $value = $element['#value'];
+  if (empty($value)) {
+    return;
+  }
+  if ($value < $element['#sellformfield']->min_value) {
+    form_error($element, t('@name is too low.', array('@name' => $element['#title'])));
+  }
+  elseif ($element['#sellformfield']->max_value != 0 && $value > $element['#sellformfield']->max_value) {
+    form_error($element, t('@name is too high.', array('@name' => $element['#title'])));
+  }
+}
+
 
 /**
  * Converts Allegro fields to form API elements.
@@ -761,10 +863,4 @@ function allegro_field_download($offset, $package) {
     drupal_set_message($e->faultstring, 'error');
   }
   return $counter;
-}
-
-function allegro_field_combobox_validate($element, &$form_state) {
-  if (!empty($element['#required']) && $element['#value'] == 0) {
-    form_error($element, t('!name field is required.', array('!name' => $element['#title'])));
-  }
 }

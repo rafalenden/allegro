@@ -18,7 +18,7 @@ class AllegroItemController extends EntityAPIController {
     $allegro_items = parent::load($ids, $conditions);
 
     $result = db_select('allegro_field_data', 'fd')
-      ->condition('fd.item_id', $ids, 'IN')
+      ->condition('fd.item_id', $ids)
       ->fields('fd', array('item_id', 'fid', 'value'))
       ->orderBy('fd.fid')
       ->execute()->fetchAll();
@@ -41,7 +41,7 @@ class AllegroItemController extends EntityAPIController {
    */
   protected function attachLoad(&$allegro_items, $revision_id = FALSE) {
     $result = db_select('allegro_field_data', 'fd')
-      ->condition('fd.item_id', array_keys($allegro_items), 'IN')
+      ->condition('fd.item_id', array_keys($allegro_items))
       ->fields('fd', array('item_id', 'fid', 'value'))
       ->orderBy('fd.fid')
       ->execute();
@@ -217,7 +217,7 @@ class AllegroItemController extends EntityAPIController {
         // Set status of ALlegro item as inactive.
         $num_finished = db_update('allegro_item')
           ->fields(array('status' => 0))
-          ->condition('id', $ids, 'IN')
+          ->condition('id', $ids)
           ->execute();
 
         // Ignore slave server temporarily.
@@ -296,12 +296,12 @@ class AllegroItemController extends EntityAPIController {
       if (!$finish_auctions || !empty($result->finishItemsSucceed->item)) {
         // Delete Allegro item entity.
         db_delete('allegro_item')
-          ->condition('id', $ids, 'IN')
+          ->condition('id', $ids)
           ->execute();
 
         // Delete Allegro field data.
         db_delete('allegro_field_data')
-          ->condition('item_id', $ids, 'IN')
+          ->condition('item_id', $ids)
           ->execute();
 
         // Delete Field API data.
