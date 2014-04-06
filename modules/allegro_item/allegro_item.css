@@ -14,10 +14,11 @@
   display: none;
 }
 
-.progress-disabled + *, .progress-disabled ~ *, .ajax-progress, .ajax-progress-throbber {
+#allegro-item-form .progress-disabled + *, #allegro-item-form .progress-disabled ~ *,
+#allegro-item-form .ajax-progress, #allegro-item-form .ajax-progress-throbber {
   display: none;
 }
 
-.form-item-5, .form-item-28 {
+#allegro-item-form .form-item-5, #allegro-item-form .form-item-28 {
   display: inline-block;
 }
