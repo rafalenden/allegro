@@ -22,3 +22,8 @@
 #allegro-item-form .form-item-5, #allegro-item-form .form-item-28 {
   display: inline-block;
 }
+
+#allegro-item-form #edit-prepayment td:nth-child(n+2) label,
+#allegro-item-form #edit-cod td:nth-child(n+2) label {
+  display: none;
+}

@@ -18,6 +18,7 @@ class AllegroItem extends Entity {
   public $created;
   public $changed;
   public $is_new = TRUE;
+  public $field_data = array();
 
   /**
    * Create a default Allegro item.

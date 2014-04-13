@@ -55,6 +55,8 @@ function allegro_item_form($form, &$form_state, $allegro_item) {
     return array();
   }
 
+  $form['#id'] = 'allegro-item-form';
+
   $path = drupal_get_path('module', 'allegro_item');
   $form['#attached']['css'][] = $path . '/allegro_item.css';
   $form['#attached']['js'][] = $path . '/allegro_item.js';
@@ -307,8 +309,10 @@ function allegro_item_form($form, &$form_state, $allegro_item) {
     '#title' => t('Payment and shipment'),
     '#type' => 'fieldset',
     '#collapsible' => FALSE,
-    '#collapsed' => FALSE,
   );
+
+  $form_state['prepayment_shipment'] = array(36, 38, 37, 39, 41, 43, 44, 46, 47, 50, 51);
+  $prepayment =& $form_state['prepayment_shipment'];
 
   $form['payment_shipment']['prepayment'] = array(
     '#title' => t('Payment in advance'),
@@ -316,10 +320,6 @@ function allegro_item_form($form, &$form_state, $allegro_item) {
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
   );
-
-  // @TODO: Remove value of shipping costs for unchecked field when submitting the form .
-
-  $prepayment = array(36, 38, 37, 39, 41, 43, 44, 46, 47, 50, 51);
 
   $form['payment_shipment']['prepayment']['costs'] = array(
     '#type' => 'tableform',
@@ -329,8 +329,11 @@ function allegro_item_form($form, &$form_state, $allegro_item) {
       t('Next item'),
       t('Quantity in pack'),
     ),
-    '#options' => allegro_field_convert_shipping_fields_table($prepayment, $sellformfields),
+    '#options' => allegro_field_convert_shipping_fields_table($prepayment, $sellformfields, $allegro_item->field_data),
   );
+
+  $form_state['cod_shipment'] = array(40, 42, 45, 48, 49, 52);
+  $cod =& $form_state['cod_shipment'];
 
   $form['payment_shipment']['cod'] = array(
     '#title' => t('Cash on delivery'),
@@ -338,8 +341,6 @@ function allegro_item_form($form, &$form_state, $allegro_item) {
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
   );
-
-  $cod = array(40, 42, 45, 48, 49, 52);
 
   $form['payment_shipment']['cod']['costs'] = array(
     '#type' => 'tableform',
@@ -349,7 +350,7 @@ function allegro_item_form($form, &$form_state, $allegro_item) {
       t('Next item'),
       t('Quantity in pack'),
     ),
-    '#options' => allegro_field_convert_shipping_fields_table($cod, $sellformfields),
+    '#options' => allegro_field_convert_shipping_fields_table($cod, $sellformfields, $allegro_item->field_data),
   );
 
   // Free shipping methods.
@@ -513,7 +514,20 @@ function allegro_item_form_validate($form, &$form_state) {
   $values =& $form_state['values'];
   field_attach_form_validate('allegro_item', $allegro_item, $form, $form_state);
 
-  $extra_fields = isset($form['item']['category']['extra_fields']) ? $form['item']['category']['extra_fields'] : array();
+  $shipment_costs = array();
+  $disabled_fid = NULL;
+
+  foreach ($form['payment_shipment']['prepayment']['costs'] + $form['payment_shipment']['cod']['costs'] as $fid => $element) {
+    if (isset($form_state['values']['label_' . $fid]) && empty($form_state['values']['label_' . $fid])) {
+      $disabled_fid = $fid;
+    }
+    elseif (in_array($disabled_fid, array($fid, $fid - 100, $fid - 200))) {
+      form_set_value($element, NULL, $form_state);
+    }
+  }
+
+  $extra_fields = isset($form['item']['category']['extra_fields'])
+    ? $form['item']['category']['extra_fields'] : array();
   $extra_values = array();
 
   foreach ($extra_fields as $key => $extra_field) {
@@ -527,6 +541,7 @@ function allegro_item_form_validate($form, &$form_state) {
     if (isset($values[$field->fid])) {
       $values[$field->fid] = $extra_values[$field->fid] = (array) $values[$field->fid];
 
+      // Field type is one of checkboxes, radios or select.
       $has_options =  in_array($field->type, array(
         ALLEGRO_FIELD_COMBOBOX, ALLEGRO_FIELD_RADIOBUTTON, ALLEGRO_FIELD_CHECKBOX
       ));
@@ -537,6 +552,7 @@ function allegro_item_form_validate($form, &$form_state) {
     }
   }
 
+  // Don't continue when there are any errors.
   $form_errors = form_get_errors();
   if (!empty($form_errors)) {
     return FALSE;
@@ -593,7 +609,7 @@ function allegro_item_form_validate($form, &$form_state) {
       $form_state['checked_item'] = $form_state['checked_item']->changedItem;
     }
   }
-  catch (SoapFault $e) {
+  catch (Exception $e) {
     if (function_exists('dpm')) {
       dpm($allegro, '$allegro');
       dpm($allegro_item, '$allegro_item');
@@ -601,7 +617,7 @@ function allegro_item_form_validate($form, &$form_state) {
       dpm($form_state, '$form_state');
     }
 
-    form_set_error('', $e->faultstring);
+    form_set_error('', $e->getMessage());
     watchdog_exception('allegro_item', $e);
     return FALSE;
   }
@@ -625,7 +641,7 @@ function allegro_item_form_submit($form, &$form_state) {
   try {
     $allegro = allegro_client();
 
-    $allegro_item = &$form_state['allegro_item'];
+    $allegro_item =& $form_state['allegro_item'];
     $allegro_item->title = $form_state['values'][1];
     $allegro_item->sellformfields = $form_state['sellformfields_values'];
     $allegro_item->sellformfields_prepared = $form_state['sellformfields_prepared'];
@@ -633,8 +649,12 @@ function allegro_item_form_submit($form, &$form_state) {
     field_attach_submit('allegro_item', $allegro_item, $form, $form_state);
 
     $is_new = $allegro_item->is_new;
-    $allegro_item = allegro_item_save($allegro_item);
     $t_args = array('%title' => $allegro_item->title);
+    $allegro_item = allegro_item_save($allegro_item);
+
+    if (!($allegro_item instanceof AllegroItem)) {
+      throw new Exception(t('Error occurred while saving Allegro item %title.', $t_args));
+    }
 
     if ($is_new) {
       $item_external_link = l($allegro_item->title, $allegro_item->externalURL());
@@ -666,8 +686,8 @@ function allegro_item_form_submit($form, &$form_state) {
 
     $form_state['redirect'] = $allegro_item->url();
   }
-  catch (SoapFault $e) {
-    form_set_error('', $e->faultstring);
+  catch (Exception $e) {
+    form_set_error('', $e->getMessage());
     return FALSE;
   }
 }

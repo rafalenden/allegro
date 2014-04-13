@@ -715,18 +715,25 @@ function allegro_field_convert_range($sellformfields = array(), $fid_from = 0, $
  *   For FID=3 function will convert fields with FID=(3, 30, 300).
  * @param array $sellformfields
  *   An array containing Allegro field objects loaded from database.
+ * @param array $sellformfields_data
+ *   An array containing data for Allegro field.
  *
  * @return array
  *   An array of form API elements ready to insert as row in form table.
  */
-function allegro_field_convert_shipping_fields_row($fid, $sellformfields) {
+function allegro_field_convert_shipping_fields_row($fid, $sellformfields, $sellformfields_data = array()) {
   $row = array();
   for ($i = $fid; $i <= (200 + $fid); $i += 100) {
     if (empty($sellformfields[$i])) {
       continue;
     }
 
-    $field = allegro_field_convert($sellformfields[$i]);
+    if (!isset($sellformfields_data[$i])) {
+      $sellformfields_data[$i] = NULL;
+    }
+
+    $field = allegro_field_convert($sellformfields[$i], $sellformfields_data[$i]);
+    unset($field['#description']);
 
     switch ($i - $fid) {
       // First column.
@@ -736,6 +743,7 @@ function allegro_field_convert_shipping_fields_row($fid, $sellformfields) {
         $row['label_' . $fid] = array(
           '#title' => $title[0],
           '#type' => 'checkbox',
+          '#default_value' => (bool) $sellformfields_data[$fid],
         );
         $field['#field_suffix'] = 'zł';
         break;
@@ -754,8 +762,6 @@ function allegro_field_convert_shipping_fields_row($fid, $sellformfields) {
       'visible' => array(':input[id="edit-label-' . $basic_fid . '"]' => array('checked' => TRUE)),
     );
 
-    // Title of those fields is placed in table header.
-    unset($field['#title']);
     $row[$i] = $field;
   }
 
@@ -769,14 +775,16 @@ function allegro_field_convert_shipping_fields_row($fid, $sellformfields) {
  *   Field IDs to convert and put in table.
  * @param array $sellformfields
  *   An array containing Allegro field objects loaded from database.
+ * @param array $sellformfields_data
+ *   An array containing data for Allegro field.
  *
  * @return array
  *   An array of form API elements ready to insert as row in form table.
  */
-function allegro_field_convert_shipping_fields_table($fids, $sellformfields) {
+function allegro_field_convert_shipping_fields_table($fids, $sellformfields, $sellformfields_data = array()) {
   $rows = array();
   foreach ($fids as $fid) {
-    $rows[] = allegro_field_convert_shipping_fields_row($fid, $sellformfields);
+    $rows[] = allegro_field_convert_shipping_fields_row($fid, $sellformfields, $sellformfields_data);
   }
   return $rows;
 }

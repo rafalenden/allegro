@@ -159,6 +159,7 @@ class AllegroItemController extends EntityAPIController {
     catch (Exception $e) {
       $transaction->rollback();
       watchdog_exception('allegro_item', $e, $e->getMessage(), WATCHDOG_ERROR);
+      throw $e;
     }
   }
 
