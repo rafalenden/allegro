@@ -724,7 +724,7 @@ function allegro_item_finish_confirm_submit($form, &$form_state) {
       $form_state['redirect'] = 'admin/allegro';
     }
     else {
-      watchdog('allegro_item', 'Error occured while finishing Allegro item %title.', $t_args);
+      watchdog('allegro_item', 'Error occurred while finishing Allegro item %title.', $t_args);
       drupal_set_message(t('Allegro item %title could not be finished.', $t_args), 'error');
     }
   }
@@ -771,7 +771,7 @@ function allegro_item_delete_confirm_submit($form, &$form_state) {
       $form_state['redirect'] = 'admin/allegro';
     }
     else {
-      watchdog('allegro_item', 'Error occured while deleting Allegro item %title.', $t_args);
+      watchdog('allegro_item', 'Error occurred while deleting Allegro item %title.', $t_args);
       drupal_set_message(t('Allegro item %title could not be deleted.', $t_args), 'error');
     }
   }
@@ -808,7 +808,7 @@ function allegro_item_sell_again_confirm_submit($form, &$form_state) {
       $form_state['redirect'] = 'admin/allegro';
     }
     else {
-      watchdog('allegro_item', 'Error occured while listing again Allegro item %title.', $t_args);
+      watchdog('allegro_item', 'Error occurred while listing again Allegro item %title.', $t_args);
       drupal_set_message(t('Allegro item %title could not be listed again.', $t_args), 'error');
     }
   }

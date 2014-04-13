@@ -15,7 +15,7 @@ function allegro_field_settings_form() {
 
   $total_fields = db_query('SELECT COUNT(*) FROM {allegro_field} WHERE country_code = :country_code', array(':country_code' => variable_get('allegro_country_code')))->fetchField();
 
-  // Make serverity constants accessible.
+  // Make severity constants accessible.
   include_once DRUPAL_ROOT . '/includes/install.inc';
 
   $sync_status_ok = variable_get('allegro_field_ver_key') <= variable_get('allegro_field_last_update');
@@ -28,7 +28,7 @@ function allegro_field_settings_form() {
     'severity' => $total_fields > 0 ? REQUIREMENT_OK : REQUIREMENT_WARNING,
   );
   $requirements[] = array(
-    'title' => t('Viersion of field definitions'),
+    'title' => t('Version of field definitions'),
     'value' => variable_get('allegro_field_ver_str')
       ? variable_get('allegro_field_ver_str') : t('Unknown'),
     'severity' => $sync_up_to_date && variable_get('allegro_field_ver_str')
@@ -42,7 +42,7 @@ function allegro_field_settings_form() {
       ? REQUIREMENT_OK : REQUIREMENT_WARNING,
   );
   $requirements[] = array(
-    'title' => t('Last synchronisation of fields'),
+    'title' => t('Last synchronization of fields'),
     'value' => variable_get('allegro_field_last_update')
       ? format_date(variable_get('allegro_field_last_update')) : t('Unknown'),
     'severity' => $sync_up_to_date && variable_get('allegro_field_last_update')
@@ -55,7 +55,7 @@ function allegro_field_settings_form() {
 
   $form['synchronise_fields'] = array(
     '#type' => 'submit',
-    '#value' => t('Synchronise fields'),
+    '#value' => t('Synchronize fields'),
     '#submit' => array('allegro_field_download_batch'),
   );
 

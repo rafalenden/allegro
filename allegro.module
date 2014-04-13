@@ -89,7 +89,7 @@ function allegro_client($login = TRUE, $reset = FALSE) {
  * @param int $countryCode
  *   Country code of targeted market.
  * @param bool $testMode
- *   Use WebAPI sandbox instead of production enviroment.
+ *   Use WebAPI sandbox instead of production environment.
  *
  * @return bool
  *   TRUE when connection is successful, FALSE otherwise.
@@ -148,7 +148,7 @@ function allegro_object2array($object) {
  *   Load website with this country code.
  *
  * @return mixed
- *  Website addres if found, FALSE otherwise.
+ *  Website address if found, FALSE otherwise.
  */
 function allegro_load_website_by_country_code($country_code) {
   $websites = Allegro::getSupportedWebsites();

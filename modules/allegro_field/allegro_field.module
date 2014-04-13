@@ -336,7 +336,7 @@ function allegro_field_split($string) {
 }
 
 /**
- * Creates options array from two strings splitted with pipe "|".
+ * Creates options array from two strings split with pipe "|".
  *
  * @param string $keys
  *   Options keys.

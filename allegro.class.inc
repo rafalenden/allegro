@@ -66,7 +66,7 @@ class Allegro {
    * @param string $countryCode
    *   Code of country to connect through WebAPI.
    * @param bool $testMode
-   *   Use WebAPI sandbox instead of production enviroment.
+   *   Use WebAPI sandbox instead of production environment.
    *
    * @return object
    *   Allegro client object.
@@ -440,7 +440,7 @@ class Allegro {
  *
  * It checks an offer created by the doNewAuctionExt method when a value of the
  * localId parameter has been passed while calling it from an account of a
- * logged-in user as well as a idenitifier of a relisted offer (created by using
+ * logged-in user as well as a identifier of a relisted offer (created by using
  * doSellSomeAgain/doSellSomeAgainInShop when a value of the localId parameter
  * has been passed while calling them). localId value is always unique within a
  * given user account.
