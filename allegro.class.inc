@@ -143,11 +143,11 @@ class Allegro {
   }
 
   /**
-   * This method allows for comprehensive offer editing both listed and planned
-   * to be listed.
+   * Comprehensive offer editing.
    *
-   * In order to add elements to the offer or change them, you need to pass data
-   * of selected fields of the fieldsToModify structure.
+   * This method allows for comprehensive offer editing both listed and planned
+   * to be listed. In order to add elements to the offer or change them, you
+   * need to pass data of selected fields of the fieldsToModify structure.
    * To remove elements you need to pass data of selected fields of the
    * fieldsToRemove structure.
    * A list of fields available in the offer can be loaded by using the
@@ -194,6 +194,8 @@ class Allegro {
   }
 
 /**
+ * Closing an offer before scheduled time.
+ *
  * This method allows for closing the offer (both ongoing and scheduled for listing)
  * of a logged-in user before scheduled time (with or without cancellation of bids).
  *
@@ -224,6 +226,8 @@ class Allegro {
   }
 
 /**
+ * Closing many offers before scheduled time.
+ *
  * This method allows for closing many offers (both ongoing and scheduled for listing)
  * of a logged-in user before scheduled time (with or without cancellation of bids).
  *
@@ -235,7 +239,8 @@ class Allegro {
  * @return object
  *   Following properties are available:
  *   - finishItemsSucceed: Array of identifiers of successfully ended offers.
- *   - finishItemsFailed: Arrays of structures containing information on offers that fail to end.
+ *   - finishItemsFailed: Arrays of structures containing information on offers
+ *       that fail to end.
  *     - finishItemId: Offer identifier.
  *     - finishErrorCode: Error code indicating a reason of the failure.
  *     - finishErrorMessage: Error message describing a reason of the failure.
@@ -250,24 +255,89 @@ class Allegro {
   }
 
   /**
-   * Metoda pozwala na pobranie pełnego drzewa kategorii dostępnych we wskazanym kraju.
-   * (http://allegro.pl/webapi/documentation.php/show/id,46)
+   * Loading the category tree.
    *
-   * @return array
+   * This method allows for loading a full tree of categories available in a
+   * selected country.
+   *
+   * @see http://allegro.pl/webapi/documentation.php/show/id,1101?lang=en
+   *
+   * @return object
+   *   Following properties are available:
+   *   - catsList: Array of structures containing information on each category.
+   *     - catId: Category identifier.
+   *     - catName: Category name.
+   *     - catParent: Supracategory identifier (or 0 for main categories).
+   *     - catPosition: Position of a category in comparison with other
+   *         categories of the same tier (indexed from 0).
+   *     - catIsProductCatalogueEnabled: Outdated field (will always return 0).
+   *   - verKey: Version key value relevant for a selected country and WebAPI
+   *       key provided.
+   *   - verStr: Component version of a category’s tree structure relevant for a
+   *       WebAPI key provided.
    */
   public function getCatsData() {
     return $this->client->doGetCatsData($this->countryCode, 0, $this->webapiKey);
   }
 
+  /**
+   * Loading category counter.
+   *
+   * This method allows for loading the counter of categories available in the
+   * selected country.
+   *
+   * @see http://allegro.pl/webapi/documentation.php/show/id,1102?lang=en
+   *
+   * @return object
+   *   Following properties are available:
+   *   - catsCount: Value of a category's counter.
+   *   - verKey: Version key value relevant for a selected country and WebAPI
+   *       key provided.
+   *   - verStr: Component version of a category’s tree structure relevant for a
+   *       WebAPI key provided.
+   */
   public function getCatsDataCount() {
     $params = array(
       'countryId' => $this->countryCode,
       'localVersion' => 0,
       'webapiKey' => $this->webapiKey,
     );
+
     return $this->client->doGetCatsDataCount($params);
   }
 
+  /**
+   * Loading tree of categories (in portions).
+   *
+   * This method allows for loading in portions the full tree of categories
+   * available in the indicated country. 50 elements are returned by default.
+   * The size of portion can be regulated by the packageElement parameter and
+   * the offset parameter allows to control the process of loading next portions
+   * of data.
+   *
+   * @see http://allegro.pl/webapi/documentation.php/show/id,1086?lang=en
+   *
+   * @param int $offset
+   *   Parameter which allows for controlling loading of new data portions
+   *     (portion numbers are indexed from 0).
+   * @param int $packageElement
+   *   Parameter which allows for defining a size of data portion
+   *     (scope 1-5000; 5000 by default).
+   *
+   * @return object
+   *   Following properties are available:
+   *   - catsList: Array of structures containing information on each category.
+   *     - catId: Category identifier.
+   *     - catName: Category name.
+   *     - catParent: Supracategory identifier (or 0 for main categories).
+   *     - catPosition: Position of a category in comparison with other
+   *         categories of the same tier (indexed from 0).
+   *     - catIsProductCatalogueEnabled: Outdated field (will always return 0).
+   *   - verKey: Version key value relevant for a selected country and WebAPI
+   *       key provided.
+   *   - verStr: Component version of a category's tree structure relevant for a
+   *       WebAPI key provided.
+   */
   public function getCatsDataLimit($offset = 0, $packageElement = 5000) {
     $params = array(
       'countryId' => $this->countryCode,
@@ -276,20 +346,105 @@ class Allegro {
       'offset' => $offset,
       'packageElement' => $packageElement,
     );
+
     return $this->client->doGetCatsDataLimit($params);
   }
 
+  /**
+   * Loading a list of sale form fields.
+   *
+   * This method allows for loading a list of sale form fields that are
+   * available in a given country. Selected fields can be used to e.g. build and
+   * fill out the form of listing a new offer using the doNewAuctionExt method.
+   *
+   * @see http://allegro.pl/webapi/documentation.php/show/id,1110?lang=en
+   *
+   * @return object
+   *   Following properties are available:
+   *   - sellFormFields: Array of structures containing information on sale form fields.
+   *     - sellFormId: Field identifier.
+   *     - sellFormTitle: Field name.
+   *     - sellFormCat: Identifier of category to which the field refers (it
+   *         also relates to all subcategories of this category). 0 means that
+   *         the parameter refers to all the categories.
+   *     - sellFormType: Definition of a field type in sale form:
+   *         1 - string
+   *         2 - integer
+   *         3 - float
+   *         4 - combobox
+   *         5 - radiobutton
+   *         6 - checkbox
+   *         7 - image (base64Binary)
+   *         8 - text (textarea)
+   *         9 - datetime (Unix time)
+   *         13 - date
+   *     - sellFormResType: Indication of a field type where the selected field
+   *         value should be provided:
+   *         1 - string
+   *         2 - integer
+   *         3 - float,
+   *         7 - image (base64Binary)
+   *         9 - datetime (Unix time)
+   *         13 - date
+   *     - sellFormDefValue: Default field value (for such fields as
+   *         combobox/radiobutton/checkbox - on the basis of sellFormOptsValues).
+   *     - sellFormOpt: Information on whether the field is obligatory:
+   *         1 - obligatory
+   *         8 - optional
+   *     - sellFormPos: Field position on the list of fields in the sale form.
+   *         0 means that sorting is alphabetical.
+   *     - sellFormLength: Acceptable size (in characters) of the field value to
+   *         be provided.
+   *     - sellMinValue: Minimum field value to be provided  (it refers to such
+   *         fields as: int, float, combobox, checkbox, date; 0 means there is
+   *         no lower limit).
+   *     - sellMaxValue: Maximum field value to be provided  (it refers to such
+   *         fields as: int, float, combobox, checkbox, date; 0 means there is
+   *         no upper limit).
+   *     - sellFormDesc: Description of subsequent values that may be set for a
+   *         field (it refers to such fields as combobox/radiobutton/checkbox).
+   *     - sellFormOptsValues: Indication of specific values (relevant for
+   *         descriptions mentioned above) which can be set for a particular
+   *         field (it refers to such fields as combobox/radiobutton/checkbox;
+   *         for checkbox fields, subsequent values can be summed up).
+   *     - sellFormFieldDesc: Detailed field description.
+   *     - sellFormParamId: Unique field identifier.
+   *     - sellFormParamValues: Unique and fixed parameter value identifiers
+   *         (it refers to such fields as combobox/radiobutton/checkbox).
+   *     - sellFormParentId: Parent parameter identifier (his sellFormParamId -
+   *         only for dependent parameters not being on top of hierarchy. If a
+   *         parameter is not a dependent one or if it can be found on top of
+   *         hierarchy of dependent parameters, 0 value will be returned in the
+   *         field).
+   *     - sellFormParentValue: Parent parameter value for which a related
+   *         parameter can be used (only for dependent parameters. If a
+   *         parameter is not a dependent one no value will be returned in the
+   *         field).
+   *     - sellFormUnit: Parameter unit (if it has been specified).
+   *     - sellFormOptions: Bitmask informing about parameter properties:
+   *        1 - dependent
+   *        2 - checkbox using the OR operator with a possible selection of one
+   *          several or all the values by the seller in the sale form
+   *        4 - checkbox using the OR operator with a possible selection of only
+   *          one value  by the seller in the sale form
+   *        8 - range parameter.
+   *        If values 2 and 4 are not set, checkbox is based on the AND operator.
+   */
   public function getSellFormFields() {
     $params = array(
       'countryCode' => $this->countryCode,
       'localVersion' => 0,
       'webapiKey' => $this->webapiKey,
     );
+
     return $this->client->doGetSellFormFieldsExt($params);
   }
 
   /**
-   * Get number of fields in country.
+   * Loading fields counter.
+   *
+   * This method allows for loading the counter of fields available in the
+   * selected country.
    *
    * @return int
    *   Number of available fields in country.
@@ -298,6 +453,27 @@ class Allegro {
     return $this->getSellFormFieldsLimit(0, 1)->formFieldsCount;
   }
 
+/**
+ * Loading a list of sale form fields (in portions).
+ *
+ * This method allows for loading (in portions) a list of sale form fields
+ * available in the indicated country. Selected fields can be used to e.g. build
+ * and fill out the form of listing a new offer using the doNewAuctionExt method.
+ * 50 elements are returned by default. The size of portion can be regulated by
+ * the packageElement parameter and the offset parameter allows to control the
+ * process of loading next portions of data.
+ *
+ * @see http://allegro.pl/webapi/documentation.php/show/id,1111?lang=en
+ *
+ * @param int $offset
+ *   Parameter which allows for controlling loading of new data bits (bid
+ *   numbers are indexed from 0).
+ * @param int $packageElement
+ *   Parameter which allows for defining a size of data bits (min. 1, default: 50).
+ *
+ * @return object
+ *   @see getSellFormFields()
+ */
   public function getSellFormFieldsLimit($offset = 0, $packageElement = 50) {
     $params = array(
       'countryCode' => $this->countryCode,
@@ -306,15 +482,22 @@ class Allegro {
       'offset' => $offset,
       'packageElement' => $packageElement,
     );
+
     return $this->client->doGetSellFormFieldsExtLimit($params);
   }
 
+  /**
+   * Get version for specified country.
+   *
+   * @return int
+   */
   public function getVersion() {
     $result = $this->queryAllSysStatus();
     $versionKeys = array();
     foreach ($result->sysCountryStatus->item as $status) {
       $versionKeys[$status->countryId] = $status;
     }
+
     return $versionKeys[$this->countryCode]->verKey;
   }
 
@@ -351,6 +534,40 @@ class Allegro {
     return $this;
   }
 
+  /**
+   * Lisitng a new offer.
+   *
+   * This method allows for listing a new offer. In order to verify the new
+   * offer you need to assign it a local identifier (localId) and then check the
+   * offer using the doVerifyItem method (localId value is always unique within
+   * a given user account). To test whether sale form fields are filled out
+   * correctly and/or check costs of listing the offer but without actually
+   * doing it, you need to use the doCheckNewAuctionExt method.
+   *
+   * @see http://allegro.pl/webapi/documentation.php/show/id,1180?lang=en
+   *
+   * @param array $fields
+   *   Array of structures containing information on sale form fields (their
+   *   list can be loaded by using the doGetSellFormFieldsExt(Limit) method.
+   *   When an identifier of a particular field is passed in the fid field, you
+   *   need to send its value in an appropriate for its type fvalue field and
+   *   pass empty string of characters [string] - sending 0 (numeric types) or
+   *   logical value 'false' [boolean] in other fvalue fields. Pass only
+   *   required or desirable fieds.
+   *   @see getSellFormFields()
+   * @param int $localId
+   *   Value of a local identifier that can be additionally assigned to an offer
+   *   (scope: 1-9999999999999). Local identifiers are valid until transferring
+   *   related offers to archive.
+   *
+   * @return object
+   *   Following properties are available:
+   *   - itemId: Listed offer identifier.
+   *   - itemInfo: Information on costs related to listing an offer.
+   *   - itemIsAllegroStandard: Information whether an offer is marked as
+   *       Standard Allegro [PL]/Aukro Plus [CZ]/Super Offer [UA/KZ]
+   *       (1 - yes, 0 - no).
+   */
   public function newAuction($fields, $localId = 0) {
     $params = array(
       'sessionHandle' => $this->sid,
@@ -366,20 +583,62 @@ class Allegro {
     return $this->client->doNewAuctionExt($params);
   }
 
+  /**
+   * Loading values of all components and version keys.
+   *
+   * This method allows for loading values of all versioned components and
+   * enables preview of version keys for all countries.
+   *
+   * @see http://allegro.pl/webapi/documentation.php/show/id,1083?lang=en
+   *
+   * @return object
+   *   Following properties are available:
+   *   - sysCountryStatus: Array of structures containing information on
+   *       components and version keys.
+   *     - countryId: Country identifier.
+   *     - programVersion: Programme version.
+   *     - catsVersion: Version of a category tree structure.
+   *     - apiVersion: Allegro WebAPI service version.
+   *     - attribVersion: Version of parameters.
+   *     - formSellVersion: Version of sale form fields.
+   *     - siteVersion: Version of platforms.
+   *     - verKey: Version key value.
+   */
   public function queryAllSysStatus() {
     $params = array(
       'countryId' => $this->countryCode,
       'webapiKey' => $this->webapiKey,
     );
+
     return $this->client->doQueryAllSysStatus($params);
   }
 
+  /**
+   * Loading value of an indicated component and version key.
+   *
+   * This method allows for loading the value of one versioned components
+   * (category tree and sale form fields) and enables preview of version key for
+   * a particular country.
+   *
+   * @see http://allegro.pl/webapi/documentation.php/show/id,1079?lang=en
+   *
+   * @param int $sysvar
+   *   Component whose value is to be loaded:
+   *   3 - category's tree structure
+   *   4 - fields of a sale form
+   *
+   * @return object
+   *   Following properties are available:
+   *   - info: Version of the selected component.
+   *   - verKey: Version key value.
+   */
   public function querySysStatus($sysvar = 3) {
     $params = array(
       'sysvar' => $sysvar,
       'countryCode' => $this->countryCode,
       'webapiKey' => $this->webapiKey,
     );
+
     return $this->client->doQuerySysStatus($params);
   }
 
@@ -408,7 +667,8 @@ class Allegro {
    *   relisting offer (1 - remove source offers from the proper tab of My Allegro,
    *   2 - send e-mail confirming listing offer, 3 - both).
    * @param array $localIds
-   *   Array of local identifiers to be additionally assigned to offers (range: 1-9999999999999).
+   *   Array of local identifiers to be additionally assigned to offers
+   *   (range: 1-9999999999999).
    *
    * @return object
    *   Following properties are available:
@@ -420,7 +680,8 @@ class Allegro {
    *     - sellItemId: Identifier of an offer on which basis a new offer was supposed to be listed.
    *     - sellFaultCode: Error code indicating a reason of the failure.
    *     - sellFaultString: Error message describing a reason of the failure.
-   *   - itemsSellNotFound: Array of identifiers of not relisted offers (indicated offers were not created by a logged-in user or provided identifiers were incorrect).
+   *   - itemsSellNotFound: Array of identifiers of not relisted offers
+   *       (indicated offers were not created by a logged-in user or provided identifiers were incorrect).
    */
   public function sellSomeAgain(array $sellItemsArray, $sellStartingTime = 0, $sellAuctionDuration, $sellOptions, array $localIds = array()) {
     $params = array(
