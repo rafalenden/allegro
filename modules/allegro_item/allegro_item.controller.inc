@@ -17,11 +17,16 @@ class AllegroItemController extends EntityAPIController {
   public function load($ids = array(), $conditions = array()) {
     $allegro_items = parent::load($ids, $conditions);
 
-    $result = db_select('allegro_field_data', 'fd')
-      ->condition('fd.item_id', $ids)
-      ->fields('fd', array('item_id', 'fid', 'value'))
-      ->orderBy('fd.fid')
-      ->execute()->fetchAll();
+    $query = db_select('allegro_field_data', 'fd');
+
+    if ($ids) {
+      $query->condition('fd.item_id', $ids);
+    }
+
+    $query->fields('fd', array('item_id', 'fid', 'value'))
+      ->orderBy('fd.fid');
+
+    $result = $query->execute()->fetchAll();
 
     foreach ($allegro_items as &$allegro_item) {
       $allegro_item->is_new = FALSE;

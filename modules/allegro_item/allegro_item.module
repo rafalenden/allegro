@@ -4,6 +4,9 @@ define('ALLEGRO_ITEM_STATUS_NOT_SOLD', 0);
 define('ALLEGRO_ITEM_STATUS_SELLING', 1);
 define('ALLEGRO_ITEM_STATUS_SOLD', 2);
 
+define('ALLEGRO_ITEM_TYPE_BUY_NOW', 1);
+define('ALLEGRO_ITEM_TYPE_AUCTION', 2);
+
 /**
  * Implements hook_menu().
  */
@@ -384,7 +387,7 @@ function allegro_item_load($id = NULL, $reset = FALSE) {
  * @return object
  *   An array of Allegro item objects indexed by NID.
  */
-function allegro_item_load_multiple($ids = array(), $conditions = array(), $reset = FALSE) {
+function allegro_item_load_multiple($ids = FALSE, $conditions = array(), $reset = FALSE) {
   return entity_load('allegro_item', $ids, $conditions, $reset);
 }
 

@@ -239,7 +239,6 @@ function allegro_item_form($form, &$form_state, $allegro_item) {
 
 
   // Auction type.
-  // @TODO: Remove value of fields with FID 6 & 7 when submitting the form with "Buy now" auction type.
   $form['offer']['auction_type'] = array(
     '#title' => t('Auction type'),
     '#type' => 'radios',
@@ -252,7 +251,7 @@ function allegro_item_form($form, &$form_state, $allegro_item) {
   );
 
   if (!empty($sellformfields_converted[6]['#default_value'])) {
-    $form['offer']['auction_type']['#default_value'] = 2;
+    $form['offer']['auction_type']['#default_value'] = ALLEGRO_ITEM_TYPE_AUCTION;
   }
 
   // Quantity.
@@ -267,22 +266,20 @@ function allegro_item_form($form, &$form_state, $allegro_item) {
   ) + $sellformfields_converted[28];
 
   // Starting price.
-  // @TODO: Remove value of this field when is not visible.
   $form['offer'][6] = array(
     '#field_suffix' => t('zł'),
     '#description' => '',
     '#states' => array(
-      'visible' => array(':input[name=auction_type]' => array('value' => 2)),
+      'visible' => array(':input[name=auction_type]' => array('value' => ALLEGRO_ITEM_TYPE_AUCTION)),
     ),
   ) + $sellformfields_converted[6];
 
   // Minimum price.
-  // @TODO: Remove value of this field when is not visible.
   $form['offer'][7] = array(
     '#field_suffix' => t('zł'),
     '#description' => '',
     '#states' => array(
-      'visible' => array(':input[name=auction_type]' => array('value' => 2)),
+      'visible' => array(':input[name=auction_type]' => array('value' => ALLEGRO_ITEM_TYPE_AUCTION)),
     ),
   ) + $sellformfields_converted[7];
 
@@ -518,17 +515,22 @@ function allegro_item_form_validate($form, &$form_state) {
   $disabled_fid = NULL;
 
   foreach ($form['payment_shipment']['prepayment']['costs'] + $form['payment_shipment']['cod']['costs'] as $fid => $element) {
-    if (isset($form_state['values']['label_' . $fid]) && empty($form_state['values']['label_' . $fid])) {
+    if (isset($values['label_' . $fid]) && empty($values['label_' . $fid])) {
       $disabled_fid = $fid;
     }
-    elseif (in_array($disabled_fid, array($fid, $fid - 100, $fid - 200))) {
-      form_set_value($element, NULL, $form_state);
+    if (isset($disabled_fid) && in_array($disabled_fid, array($fid, $fid - 100, $fid - 200))) {
+      $values[$fid] = NULL;
     }
   }
 
+  if ($values['auction_type'] == ALLEGRO_ITEM_TYPE_BUY_NOW) {
+    $values[6] = NULL;
+    $values[7] = NULL;
+  }
+
   $extra_fields = isset($form['item']['category']['extra_fields'])
-    ? $form['item']['category']['extra_fields'] : array();
-  $extra_values = array();
+    ? $form['item']['category']['extra_fields']
+    : array();
 
   foreach ($extra_fields as $key => $extra_field) {
     if (!isset($extra_field['#sellformfield']) || !is_object($extra_field['#sellformfield'])) {
@@ -536,17 +538,16 @@ function allegro_item_form_validate($form, &$form_state) {
     }
     $field = $extra_field['#sellformfield'];
     $form_state['sellformfields'][$key] = $field;
-    $fields[$key] = $extra_field['#value'];
 
     if (isset($values[$field->fid])) {
-      $values[$field->fid] = $extra_values[$field->fid] = (array) $values[$field->fid];
+      $fields[$field->fid] = (array) $values[$field->fid];
 
       // Field type is one of checkboxes, radios or select.
       $has_options =  in_array($field->type, array(
         ALLEGRO_FIELD_COMBOBOX, ALLEGRO_FIELD_RADIOBUTTON, ALLEGRO_FIELD_CHECKBOX
       ));
       // Check if required field with options is not empty.
-      if ($field->opt == ALLEGRO_FIELD_REQUIRED && $has_options && !in_array(TRUE, $values[$field->fid])) {
+      if ($field->opt == ALLEGRO_FIELD_REQUIRED && $has_options && !in_array(TRUE, $fields[$field->fid])) {
         form_set_error($field->fid, t('@field field is required.', array('@field' => $field->title)));
       }
     }
@@ -558,11 +559,10 @@ function allegro_item_form_validate($form, &$form_state) {
     return FALSE;
   }
 
-  $fields = $extra_values;
   $form_state['sellformfields_values'] =& $fields;
 
   foreach ($values as $key => $value) {
-    if (!empty($form_state['sellformfields'][$key])) {
+    if (isset($form_state['sellformfields'][$key])) {
       $sellformfield = $form_state['sellformfields'][$key];
 
       // Single value field.
@@ -599,7 +599,7 @@ function allegro_item_form_validate($form, &$form_state) {
     else {
       $fields = array_diff_assoc($fields, $allegro_item->field_data);
       // Unset start price and minimal price when auction type is "Buy now!".
-      if ($form_state['values']['auction_type'] == 1) {
+      if ($values['auction_type'] == 1) {
         $fields[6] = $fields[7] = 0;
       }
 
@@ -608,6 +608,8 @@ function allegro_item_form_validate($form, &$form_state) {
       $form_state['checked_item'] = $allegro->changeItemFields($allegro_item->external_id, $form_state['sellformfields_prepared'], array(), TRUE);
       $form_state['checked_item'] = $form_state['checked_item']->changedItem;
     }
+
+    // throw new Exception('Test');
   }
   catch (Exception $e) {
     if (function_exists('dpm')) {
@@ -625,11 +627,6 @@ function allegro_item_form_validate($form, &$form_state) {
 
 /**
  * Form submit callback for allegro_item_form().
- *
- * @global object $user
- *
- * @param array $form
- * @param array $form_state
  *
  * @return bool
  *   TRUE if no errors occurred, FALSE otherwise.
