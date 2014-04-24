@@ -1,6 +1,6 @@
 <?php
 
-class Allegro {
+class AllegroAPI {
 
   public $session;
   public $sid;
@@ -72,7 +72,7 @@ class Allegro {
    *   Allegro client object.
    */
   public static function testConnection($login, $password, $apiKey, $countryCode, $testMode = FALSE) {
-    $test = new Allegro();
+    $test = new AllegroAPI();
     $test->userLogin = $login;
     $test->userPassword = $password;
     $test->webapiKey = $apiKey;
@@ -348,6 +348,36 @@ class Allegro {
     );
 
     return $this->client->doGetCatsDataLimit($params);
+  }
+
+  /**
+   * Loading information on many offers.
+   *
+   * This method allows for loading available information (description,
+   * category, photos, parameters, available delivery and payment methods, etc.)
+   * on indicated offers.
+   *
+   * @param array $itemsIdArray
+   * @param int $getDesc
+   * @param int $getImageUrl
+   * @param int $getAttribs
+   * @param int $getPostageOptions
+   * @param int $getCompanyInfo
+   *
+   * @return object
+   */
+  public function getItemsInfo(array $itemsIdArray, $getDesc = 0, $getImageUrl = 0, $getAttribs = 0, $getPostageOptions = 0, $getCompanyInfo = 0) {
+    $params = array(
+      'sessionHandle' => $this->sid,
+      'itemsIdArray' => $itemsIdArray,
+      'getDesc' => $getDesc,
+      'getImageUrl' => $getImageUrl,
+      'getAttribs' => $getAttribs,
+      'getPostageOptions' => $getPostageOptions,
+      'getCompanyInfo' => $getCompanyInfo,
+    );
+
+    return $this->client->doGetItemsInfo($params);
   }
 
   /**
@@ -734,4 +764,3 @@ class Allegro {
   }
 
 }
-

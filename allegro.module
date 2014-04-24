@@ -48,7 +48,7 @@ function allegro_client($login = TRUE, $reset = FALSE) {
 
   if (empty($allegro) || $allegro->logged != $login) {
     try {
-      $allegro = new Allegro();
+      $allegro = new AllegroAPI();
 
       $allegro->userLogin = variable_get('allegro_login');
       $allegro->userPassword = variable_get('allegro_password');
@@ -116,7 +116,7 @@ function allegro_test_connection($login = NULL, $password = NULL, $webapikey = N
   }
 
   try {
-    Allegro::testConnection($login, $password, $webapikey, $countryCode, $testMode);
+    AllegroAPI::testConnection($login, $password, $webapikey, $countryCode, $testMode);
     return TRUE;
   }
   catch (SoapFault $e) {
@@ -151,6 +151,6 @@ function allegro_object2array($object) {
  *  Website address if found, FALSE otherwise.
  */
 function allegro_load_website_by_country_code($country_code) {
-  $websites = Allegro::getSupportedWebsites();
+  $websites = AllegroAPI::getSupportedWebsites();
   return isset($websites[$country_code]) ? $websites[$country_code] : FALSE;
 }

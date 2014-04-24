@@ -41,7 +41,7 @@ function allegro_settings_form() {
     '#type' => 'select',
     '#title' => t('Auction site'),
     '#description' => t('Auction site to connect with.'),
-    '#options' => Allegro::getSupportedWebsites(),
+    '#options' => AllegroAPI::getSupportedWebsites(),
     '#default_value' => variable_get('allegro_country_code', 1),
     '#required' => TRUE,
   );
@@ -67,7 +67,7 @@ function allegro_settings_form_submit($form, &$form_state) {
   if (empty($values['allegro_password'])) {
     $values['allegro_password'] = variable_get('allegro_password');
   }
-  elseif (Allegro::isPasswordEncrypted()) {
+  elseif (AllegroAPI::isPasswordEncrypted()) {
     // Encrypt password before saving.
     $values['allegro_password'] = base64_encode(hash('sha256', $values['allegro_password'], TRUE));
   }
