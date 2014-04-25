@@ -30,7 +30,8 @@ function allegro_item_menu() {
   $items['allegro-item/add'] = array(
     'title' => 'Add Allegro item',
     'page callback' => 'allegro_item_add_page',
-    'access arguments' => array('create allegro items'),
+    'access callback' => 'entity_access',
+    'access arguments' => array('create', 'allegro_item', 'allegro_item'),
     'file' => 'allegro_item.pages.inc',
     'type' => MENU_LOCAL_ACTION,
   );
@@ -39,7 +40,8 @@ function allegro_item_menu() {
     'title' => 'Allegro item',
     'page callback' => 'allegro_item_view_page',
     'page arguments' => array(1),
-    'access arguments' => array('view allegro items'),
+    'access callback' => 'entity_access',
+    'access arguments' => array('view', 'allegro_item', 1),
     'file' => 'allegro_item.pages.inc',
   );
   $items['allegro-item/%allegro_item/view'] = array(
@@ -52,7 +54,8 @@ function allegro_item_menu() {
     'title' => 'Edit',
     'page callback' => 'allegro_item_edit_page',
     'page arguments' => array(1),
-    'access arguments' => array('update allegro items'),
+    'access callback' => 'entity_access',
+    'access arguments' => array('edit', 'allegro_item', 1),
     'type' => MENU_LOCAL_TASK,
     'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
     'file' => 'allegro_item.pages.inc',
@@ -63,8 +66,8 @@ function allegro_item_menu() {
     'title' => 'Finish',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('allegro_item_finish_confirm', 1),
-    'access callback' => 'allegro_item_access',
-    'access arguments' => array('finish allegro items', 1),
+    'access callback' => 'entity_access',
+    'access arguments' => array('finish', 'allegro_item', 1),
     'type' => MENU_LOCAL_TASK,
     'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
     'file' => 'allegro_item.pages.inc',
@@ -75,8 +78,8 @@ function allegro_item_menu() {
     'title' => 'Delete',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('allegro_item_delete_confirm', 1),
-    'access callback' => 'allegro_item_access',
-    'access arguments' => array('delete allegro items', 1),
+    'access callback' => 'entity_access',
+    'access arguments' => array('delete', 'allegro_item', 1),
     'type' => MENU_LOCAL_TASK,
     'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
     'file' => 'allegro_item.pages.inc',
@@ -87,8 +90,8 @@ function allegro_item_menu() {
     'title' => 'Sell again',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('allegro_item_sell_again_confirm', 1),
-    'access callback' => 'allegro_item_access',
-    'access arguments' => array('sell again allegro items', 1),
+    'access callback' => 'entity_access',
+    'access arguments' => array('sell-again', 'allegro_item', 1),
     'type' => MENU_LOCAL_TASK,
     'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
     'file' => 'allegro_item.pages.inc',
@@ -222,26 +225,6 @@ function allegro_item_admin_paths() {
 }
 
 /**
- * Wrapper around user_access().
- *
- * @param string $permission
- *   The permission, such as "administer allegro", being checked for.
- * @param object $allegro_item
- *   Allegro item entity object.
- * @return bool
- *  TRUE if the current user has the requested permission, FALSE otherwise.
- */
-function allegro_item_access($permission, $allegro_item) {
-  if ($permission == 'sell again allegro items' && $allegro_item->status == ALLEGRO_ITEM_STATUS_NOT_SOLD && user_access($permission)) {
-    return TRUE;
-  }
-  elseif ($allegro_item->status == ALLEGRO_ITEM_STATUS_SELLING && user_access($permission)) {
-    return TRUE;
-  }
-  return FALSE;
-}
-
-/**
  * Creates URL of Allegro item.
  *
  * @param int $item_id
@@ -258,7 +241,7 @@ function allegro_item_url_external($item_id, $country_code = NULL) {
   }
 
   $test_mode = variable_get('allegro_test_mode', FALSE);
-  $websites = Allegro::getSupportedWebsites();
+  $websites = AllegroAPI::getSupportedWebsites();
 
   if ($test_mode) {
     return 'http://' . $websites[$country_code] . '.webapisandbox.pl/show_item.php?item=' . $item_id;
@@ -306,16 +289,63 @@ function allegro_item_permission() {
     'create allegro items' => array(
       'title' => t('Create Allegro items'),
     ),
-    'update allegro items' => array(
-      'title' => t('Update Allegro items'),
+    'edit any allegro item' => array(
+      'title' => t('Edit any Allegro items'),
+    ),
+    'edit own allegro item' => array(
+      'title' => t('Edit own Allegro items'),
     ),
     'view allegro items' => array(
       'title' => t('View Allegro items'),
     ),
-    'delete allegro items' => array(
-      'title' => t('Delete Allegro items'),
+    'delete any allegro item' => array(
+      'title' => t('Edit any Allegro items'),
+    ),
+    'delete own allegro item' => array(
+      'title' => t('Delete own Allegro items'),
     ),
   );
+}
+
+/**
+* Access callback for Allegro item.
+*/
+function allegro_item_access($op, $allegro_item, $account = NULL, $entity_type = NULL) {
+  global $user;
+  if (!isset($account)) {
+    $account = $user;
+  }
+
+  switch ($op) {
+    case 'create':
+      return user_access('administer allegro items', $account)
+          || user_access('create allegro items', $account);
+    case 'view':
+      return user_access('administer allegro items', $account)
+          || user_access('view allegro item', $account);
+    case 'edit':
+      return user_access('administer allegro items')
+          || user_access('edit any allegro item')
+          || (user_access('edit own allegro item') && ($allegro_item->uid == $account->uid));
+    case 'delete':
+      return user_access('administer allegro items')
+          || user_access('delete any allegro item')
+          || (user_access('delete own allegro item') && ($allegro_item->uid == $account->uid));
+    case 'sell-again':
+      if ($allegro_item->status != ALLEGRO_ITEM_STATUS_NOT_SOLD) {
+        return FALSE;
+      }
+      return user_access('administer allegro items')
+          || user_access('sell again any allegro item')
+          || (user_access('sell again own allegro item') && ($allegro_item->uid == $account->uid));
+    case 'finish':
+      if ($allegro_item->status != ALLEGRO_ITEM_STATUS_SELLING) {
+        return FALSE;
+      }
+      return user_access('administer allegro items')
+          || user_access('finish any allegro item')
+          || (user_access('finish own allegro item') && ($allegro_item->uid == $account->uid));
+  }
 }
 
 /**

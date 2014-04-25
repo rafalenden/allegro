@@ -55,7 +55,7 @@ function allegro_item_entity_property_info() {
   );
   $properties['uid'] = array(
     'label' => t('Creator ID'),
-    'type' => 'integer',
+    'type' => 'user',
     'description' => t('The unique ID of the item creator.'),
     'setter callback' => 'entity_property_verbatim_set',
     'setter permission' => 'administer allegro items',

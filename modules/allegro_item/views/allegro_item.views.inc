@@ -21,12 +21,4 @@ function allegro_item_views_data_alter(&$data) {
       'handler' => 'allegro_item_handler_field_operations',
     ),
   );
-
-  // Expose the creator uid.
-  $data['allegro_item']['uid']['relationship'] = array(
-    'handler' => 'views_handler_relationship',
-    'base' => 'users',
-    'field' => 'uid',
-    'label' => t('Allegro item creator'),
-  );
 }

@@ -35,20 +35,18 @@ class allegro_item_handler_field_operations extends views_handler_field_entity {
   }
 
   function render_link($allegro_item) {
-    if (entity_access('update', 'allegro_item', $allegro_item)) {
-      // Get the operations links.
-      $links = menu_contextual_links('allegro-item', 'allegro-item', array($allegro_item->id));
+    // Get the operations links.
+    $links = menu_contextual_links('allegro_item', 'allegro-item', array($allegro_item->id));
 
-      if (!empty($links)) {
-        // Add the destination to the links if specified.
-        if ($this->options['add_destination']) {
-          foreach ($links as $id => &$link) {
-            $link['query'] = drupal_get_destination();
-          }
+    if (!empty($links)) {
+      // Add the destination to the links if specified.
+      if ($this->options['add_destination']) {
+        foreach ($links as $id => &$link) {
+          $link['query'] = drupal_get_destination();
         }
-
-        return theme('links', array('links' => $links, 'attributes' => array('class' => array('links', 'inline', 'operations'))));
       }
+
+      return theme('links', array('links' => $links, 'attributes' => array('class' => array('links', 'inline', 'operations'))));
     }
   }
 }
