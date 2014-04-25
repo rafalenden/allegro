@@ -31,7 +31,7 @@ function allegro_item_menu() {
     'title' => 'Add Allegro item',
     'page callback' => 'allegro_item_add_page',
     'access callback' => 'entity_access',
-    'access arguments' => array('create', 'allegro_item', 'allegro_item'),
+    'access arguments' => array('create', 'allegro_item'),
     'file' => 'allegro_item.pages.inc',
     'type' => MENU_LOCAL_ACTION,
   );

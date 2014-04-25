@@ -446,6 +446,7 @@ function allegro_field_convert($allego_field, $default_value = NULL) {
   $field['#title'] = stripslashes($allego_field->title);
   $field['#description'] = stripslashes($allego_field->field_desc);
   $field['#size'] = $allego_field->length;
+  $field['#default_value'] = NULL;
 
   // Set default value.
   if ($default_value) {
