@@ -437,7 +437,6 @@ function allegro_item_form($form, &$form_state, $allegro_item) {
   // Description (body).
   $form[24] = array(
     '#type' => 'text_format',
-    '#format' => 'full_html',
   ) + $sellformfields_converted[24];
 
   // $form['#after_build'][] = 'allegro_item_form_after_build';
