@@ -29,6 +29,13 @@ class AllegroItem extends Entity {
   }
 
   /**
+   * Finish selling of Allegro item.
+   */
+  public function finish() {
+    return entity_get_controller($this->entityType)->finish(array($this->identifier()));
+  }
+
+  /**
    * Override this in order to implement a custom default URI and specify
    * 'entity_class_uri' as 'uri callback' hook_entity_info().
    *
