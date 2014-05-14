@@ -103,6 +103,18 @@ class AllegroAPI {
   }
 
   /**
+   * Hash password before sending to WebAPI.
+   * @param string $plain_text_password
+   *   Plain text password.
+   *
+   * @return string
+   *   Enceded with sha246 and base64 password.
+   */
+  public static function hashPassword($plain_text_password) {
+    return base64_encode(hash('sha256', $plain_text_password, TRUE));
+  }
+
+  /**
    * Check if hashing functions are available.
    *
    * @return bool
